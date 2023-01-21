@@ -25,8 +25,20 @@ class Sherlock {
     results = [];
   }
 
-  /// Smart search.
+  /// Smart search from a user's [input].
+  ///
+  /// At first, adds the perfect matches. Then, creates a regex from the [input]
+  /// and searches in columns.
   void search({required String input}) {
+    /// Matches, no matter the case.
+    queryBool(
+      where: '*',
+      fn: (value) => (value.runtimeType == String)
+          ? value.toLowerCase() == input.toLowerCase()
+          : false,
+    );
+
+    /// Creates a regex to find other elements corresponding to the search.
     String regex = r'(';
 
     var keywords = input.split(' ');
@@ -39,12 +51,6 @@ class Sherlock {
 
     regex += r')';
 
-    queryBool(
-      where: '*',
-      fn: (value) => (value.runtimeType == String)
-          ? value.toLowerCase() == input.toLowerCase()
-          : false,
-    );
     query(where: '*', regex: regex);
   }
 
@@ -56,7 +62,7 @@ class Sherlock {
     queryContain(where: where, regex: regex, caseSensitive: caseSensitive);
   }
 
-  /// Searches for values matching with the [regex], in [where].
+  /// Searches for values matching with the [regex], in column [where].
   void queryContain({
     required String where,
     required String regex,
@@ -75,31 +81,32 @@ class Sherlock {
       /// Searches in all columns.
       if (isGlobal) {
         for (var dyn in element.values) {
-          /// Cannot check for a non-string value.
-          if (dyn.runtimeType != String) {
-            continue;
-          }
-
-          /// Here, [dyn] is a [String].
-          if (dyn.contains(what)) {
-            addResult();
-          }
+          addWhenContains(dyn: dyn, regex: what);
         }
 
         continue;
       }
 
-      /// Searches in the specified column.
+      addWhenContains(dyn: element[where], regex: what);
+    }
+  }
 
-      /// When the column does not exist, or if the column's value is not a
-      /// string, does nothing.
-      var value = element[where];
-      if (value == null || value.runtimeType != String) {
-        continue;
-      }
+  /// Searches if a matching expression of [regex] is contained in [dyn], when
+  /// [dyn] is either a [String] or a [List] of [String].
+  ///
+  /// Recursive function for [List].
+  void addWhenContains({required dynamic dyn, required RegExp regex}) {
+    if (dyn == null) {
+      return;
+    }
 
-      if (value.contains(what)) {
+    if (dyn.runtimeType == String) {
+      if (dyn.contains(regex)) {
         addResult();
+      }
+    } else if (dyn.runtimeType == List<String>) {
+      for (String element in dyn) {
+        addWhenContains(dyn: element, regex: regex);
       }
     }
   }
@@ -117,10 +124,8 @@ class Sherlock {
       /// Searches in the specified column.
       /// When it does not exist, does nothing.
       var value = currentElement[where];
-      if (value != null) {
-        if (value[what] != null) {
-          addResult();
-        }
+      if (value != null && value[what] != null) {
+        addResult();
       }
     }
   }
