@@ -1,7 +1,6 @@
 library sherlock;
 
-import 'package:flutter/cupertino.dart';
-
+/// Returns `true`. Can be used to test if "sherlock" is correctly installed.
 bool helloSherlock() {
   return true;
 }
@@ -9,35 +8,7 @@ bool helloSherlock() {
 /// The search functions add the found elements in [results]. No function
 /// returns a result.
 class Sherlock {
-  /// Where to seek.
-  ///
-  /// Parameter [elements] is a [List] of [Map].
-  /// Every element should have the same columns.
-  ///
-  /// ```dart
-  /// final elements = [
-  ///  {
-  ///    'title': 'lorem ipsum',
-  ///    'description': 'dolor sit amet',
-  ///    'id': 1,
-  ///  },
-  ///  {
-  ///    'title': 'ipsum',
-  ///    'description': 'pretium porta',
-  ///    'id': 2,
-  ///  },
-  ///  {
-  ///    'title': 'condimentum quis sollicitudin',
-  ///    'description': 'cras pretium lorem dignissim',
-  ///    'id': 3,
-  ///  },
-  ///  {
-  ///    'title': 'et lacus bibendum,',
-  ///    'description': 'nec porttitor ante porta',
-  ///    'id': 4,
-  ///  }
-  // ];
-  /// ```
+  /// Where to search.
   final List<Map<String, dynamic>> elements;
 
   /// Research findings.
@@ -56,16 +27,42 @@ class Sherlock {
 
   /// Smart search.
   void search({required String input}) {
-    // todo : transform the input into a regex
-    // todo : make it possible to do grammar errors.
-    // - "activty" -> "activity"
-    throw UnimplementedError();
+    String regex = r'(';
+
+    var keywords = input.split(' ');
+    for (var keyword in keywords) {
+      regex += keyword;
+      if (keyword != keywords.last) {
+        regex += r'|';
+      }
+    }
+
+    regex += r')';
+
+    queryBool(
+      where: '*',
+      fn: (value) => (value.runtimeType == String)
+          ? value.toLowerCase() == input.toLowerCase()
+          : false,
+    );
+    query(where: '*', regex: regex);
   }
 
-  /// Searches for values matching with the [regex], in the column [where] of
-  /// the [elements].
-  void query({required String where, required String regex}) {
-    var what = RegExp(regex);
+  void query({
+    required String where,
+    required String regex,
+    bool caseSensitive = false,
+  }) {
+    queryContain(where: where, regex: regex, caseSensitive: caseSensitive);
+  }
+
+  /// Searches for values matching with the [regex], in [where].
+  void queryContain({
+    required String where,
+    required String regex,
+    bool caseSensitive = false,
+  }) {
+    var what = RegExp(regex, caseSensitive: caseSensitive);
 
     /// Whether the search is to be performed in all columns
     var isGlobal = (where == '*');
@@ -77,21 +74,38 @@ class Sherlock {
 
       /// Searches in all columns.
       if (isGlobal) {
-        _columnSearch(column: element, what: what);
+        for (var dyn in element.values) {
+          /// Cannot check for a non-string value.
+          if (dyn.runtimeType != String) {
+            continue;
+          }
+
+          /// Here, [dyn] is a [String].
+          if (dyn.contains(what)) {
+            addResult();
+          }
+        }
+
         continue;
       }
 
       /// Searches in the specified column.
-      /// When the column does not exist, does nothing.
+
+      /// When the column does not exist, or if the column's value is not a
+      /// string, does nothing.
       var value = element[where];
-      if (value != null) {
-        _valueSearch(value: value, what: what);
+      if (value == null || value.runtimeType != String) {
+        continue;
+      }
+
+      if (value.contains(what)) {
+        addResult();
       }
     }
   }
 
   /// Searches for values when a key exists for [what] in [where].
-  void queryExists({required String where, required String what}) {
+  void queryExist({required String where, required String what}) {
     /// Cannot be global
     if (where == '*') {
       return;
@@ -105,7 +119,7 @@ class Sherlock {
       var value = currentElement[where];
       if (value != null) {
         if (value[what] != null) {
-          results.add(currentElement);
+          addResult();
         }
       }
     }
@@ -116,12 +130,26 @@ class Sherlock {
     required String where,
     required bool Function(dynamic value) fn,
   }) {
+    /// Whether the search is to be performed in all columns
+    var isGlobal = (where == '*');
+
     /// The [element] is a [Map] following the same structure.
     /// It means that [where] must be a column of [element].
     for (var element in elements) {
       currentElement = element;
 
-      /// Check the boolean expression, in the specified column.
+      /// Checks the boolean expression in all columns.
+      if (isGlobal) {
+        for (var dyn in element.values) {
+          if (fn(dyn)) {
+            addResult();
+          }
+        }
+
+        continue;
+      }
+
+      /// Checks the boolean expression, in the specified column.
       /// When the column does not exist, does nothing.
       var value = element[where];
       if (value == null) {
@@ -130,28 +158,24 @@ class Sherlock {
 
       // The boolean expression is true.
       if (fn(value)) {
-        results.add(element);
+        addResult();
       }
     }
   }
 
-  /// Searches the value corresponding to [what] in the value [value].
-  void _valueSearch({required String value, required RegExp what}) {
-    if (value.toLowerCase().contains(what)) {
-      /// Avoid duplicates
-      if (!results.contains(currentElement)) {
-        results.add(currentElement);
-      }
-    }
+  /// Searches for a value which is equal to [match], in [where].
+  void queryMatch({required String where, required dynamic match}) {
+    queryBool(where: where, fn: (value) => value == match);
   }
 
-  /// Searches the value corresponding to [what] in the [column].
-  void _columnSearch({required Map column, required RegExp what}) {
-    for (var columnOrValue in column.values) {
-      if (columnOrValue.runtimeType == String) {
-        /// Here, [columnOrValue] is a value.
-        _valueSearch(value: columnOrValue, what: what);
-      }
+  /// Adds the [currentElement] in the [results].
+  ///
+  /// Avoid duplicated, does not add the element if it's already in the
+  /// [results].
+  void addResult() {
+    /// Avoid duplicates
+    if (!results.contains(currentElement)) {
+      results.add(currentElement);
     }
   }
 }
