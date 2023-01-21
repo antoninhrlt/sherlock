@@ -1,11 +1,13 @@
 library sherlock;
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart';
 
 bool helloSherlock() {
   return true;
 }
 
+/// The search functions add the found elements in [results]. No function
+/// returns a result.
 class Sherlock {
   /// Where to seek.
   ///
@@ -52,6 +54,16 @@ class Sherlock {
     results = [];
   }
 
+  /// Smart search.
+  void search({required String input}) {
+    // todo : transform the input into a regex
+    // todo : make it possible to do grammar errors.
+    // - "activty" -> "activity"
+    throw UnimplementedError();
+  }
+
+  /// Searches for values matching with the [regex], in the column [where] of
+  /// the [elements].
   void query({required String where, required String regex}) {
     var what = RegExp(regex);
 
@@ -63,28 +75,83 @@ class Sherlock {
     for (var element in elements) {
       currentElement = element;
 
+      /// Searches in all columns.
       if (isGlobal) {
-        throw UnimplementedError();
+        _columnSearch(column: element, what: what);
+        continue;
       }
 
-      /// Where the search will be performed as requested in parameters.
-      var columnOrValue = element[where];
-
-      if (columnOrValue.runtimeType == String) {
-        var value = columnOrValue.toString();
-        if (value.toLowerCase().contains(what)) {
-          results.add(element);
-        }
-      } else {
-        throw UnimplementedError();
+      /// Searches in the specified column.
+      /// When the column does not exist, does nothing.
+      var value = element[where];
+      if (value != null) {
+        _valueSearch(value: value, what: what);
       }
     }
   }
 
-  /// Searches the value [what] in the value [value].
-  void valueSearch({required String value, required String what}) {
-    if (value.toLowerCase().contains(what.toLowerCase())) {
-      results.add(currentElement);
+  /// Searches for values when a key exists for [what] in [where].
+  void queryExists({required String where, required String what}) {
+    /// Cannot be global
+    if (where == '*') {
+      return;
+    }
+
+    for (var element in elements) {
+      currentElement = element;
+
+      /// Searches in the specified column.
+      /// When it does not exist, does nothing.
+      var value = currentElement[where];
+      if (value != null) {
+        if (value[what] != null) {
+          results.add(currentElement);
+        }
+      }
+    }
+  }
+
+  /// Searches for a value corresponding to a boolean expression in [where].
+  void queryBool({
+    required String where,
+    required bool Function(dynamic value) fn,
+  }) {
+    /// The [element] is a [Map] following the same structure.
+    /// It means that [where] must be a column of [element].
+    for (var element in elements) {
+      currentElement = element;
+
+      /// Check the boolean expression, in the specified column.
+      /// When the column does not exist, does nothing.
+      var value = element[where];
+      if (value == null) {
+        continue;
+      }
+
+      // The boolean expression is true.
+      if (fn(value)) {
+        results.add(element);
+      }
+    }
+  }
+
+  /// Searches the value corresponding to [what] in the value [value].
+  void _valueSearch({required String value, required RegExp what}) {
+    if (value.toLowerCase().contains(what)) {
+      /// Avoid duplicates
+      if (!results.contains(currentElement)) {
+        results.add(currentElement);
+      }
+    }
+  }
+
+  /// Searches the value corresponding to [what] in the [column].
+  void _columnSearch({required Map column, required RegExp what}) {
+    for (var columnOrValue in column.values) {
+      if (columnOrValue.runtimeType == String) {
+        /// Here, [columnOrValue] is a value.
+        _valueSearch(value: columnOrValue, what: what);
+      }
     }
   }
 }
