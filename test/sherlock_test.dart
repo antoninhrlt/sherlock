@@ -122,6 +122,11 @@ void main() {
 
     sherlock.forget();
 
+    /// All activities having a title which correspond to 'Extreme VR'.
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
     /// All activities starting at 7'o on tuesday.
     sherlock.queryBool(
       where: 'openingHours',
