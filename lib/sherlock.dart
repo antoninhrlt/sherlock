@@ -25,19 +25,14 @@ class Sherlock {
     results = [];
   }
 
-  /// Smart search from a user's [input].
+  /// Smart search in [where], from a user's [input].
   ///
-  /// At first, adds the perfect matches. Then, creates a regex from the [input]
-  /// and searches in columns.
-  void search({required String input}) {
-    /// Matches, no matter the case.
-    queryBool(
-      where: '*',
-      fn: (value) => (value.runtimeType == String)
-          ? value.toLowerCase() == input.toLowerCase()
-          : false,
-    );
-
+  /// The value [where] can be either a [String] (whe equal to `'*'`) or a
+  /// [List] of [String] being the columns where to search.
+  ///
+  /// Adds the perfect matches.
+  /// Creates a regex from the [input] and searches in specified columns.
+  void search({required dynamic where, required String input}) {
     /// Creates a regex to find other elements corresponding to the search.
     String regex = r'(';
 
@@ -51,7 +46,37 @@ class Sherlock {
 
     regex += r')';
 
-    query(where: '*', regex: regex);
+    if (where == '*') {
+      /// Global search
+      searchWhere(where: where, input: input, regex: regex);
+      return;
+    }
+
+    /// Searches in all specified columns.
+
+    if (where.runtimeType != List<String>) {
+      throw TypeError();
+    }
+
+    for (var column in where) {
+      searchWhere(where: column, input: input, regex: regex);
+    }
+  }
+
+  void searchWhere({
+    required String where,
+    required String input,
+    required String regex,
+  }) {
+    /// Matches, no matter the case.
+    queryBool(
+      where: where,
+      fn: (value) => (value.runtimeType == String)
+          ? value.toLowerCase() == input.toLowerCase()
+          : false,
+    );
+
+    query(where: where, regex: regex);
   }
 
   void query({

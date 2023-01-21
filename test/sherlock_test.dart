@@ -148,17 +148,22 @@ void main() {
   });
 
   test('smartSearch', () {
-    sherlock.search(input: 'cAtS');
+    sherlock.search(where: '*', input: 'cAtS');
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
 
-    sherlock.search(input: 'live online');
+    sherlock.search(where: '*', input: 'live online');
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
 
-    sherlock.search(input: 'extreme Vr');
+    sherlock.search(where: '*', input: 'extreme Vr');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
+    sherlock.search(where: ['title', 'categories'], input: 'cats');
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
