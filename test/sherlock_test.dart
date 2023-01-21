@@ -25,6 +25,7 @@ final activities = [
   },
   {
     'title': 'Meet cats',
+    'categories': ['online'],
     'description': 'Cool thing to do',
     'id': 5,
   },
