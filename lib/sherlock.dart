@@ -1,28 +1,59 @@
 library sherlock;
 
+import 'dart:ffi';
+
+import 'package:sherlock/priority.dart';
+
 /// Returns `true`. Can be used to test if "sherlock" is correctly installed.
 bool helloSherlock() {
   return true;
 }
 
+typedef Element = Map<String, dynamic>;
+typedef Column = Map<String, dynamic>;
+typedef PointsMap = Map<int, List<Element>>;
+
 /// The search functions add the found elements in [results]. No function
 /// returns a result.
 class Sherlock {
   /// Where to search.
-  final List<Map<String, dynamic>> elements;
+  final List<Element> elements;
 
-  /// Research findings.
-  List<Map<String, dynamic>> results;
+  /// Column priorities to sort results.
+  PriorityMap priorities;
 
-  Map<String, dynamic> currentElement;
+  /// Points map of the results.
+  PointsMap _unsortedResults;
 
-  Sherlock({required this.elements})
-      : results = [],
+  Element currentElement;
+
+  /// Sorted research findings.
+  List<Element> get results {
+    List<Element> sortedResults = [];
+
+    for (int resultKey in _unsortedResults.keys.toList()
+      ..sort((a, b) => -a.compareTo(b))) {
+      for (Element result in _unsortedResults[resultKey]!) {
+        sortedResults.add(result);
+      }
+    }
+
+    return sortedResults;
+  }
+
+  List<Element> get unsortedResults {
+    List<Element> results = [];
+    _unsortedResults.forEach((_, elements) => results.addAll(elements));
+    return results;
+  }
+
+  Sherlock({required this.elements, this.priorities = const {'*': 1}})
+      : _unsortedResults = {},
         currentElement = {};
 
   /// Resets the [results].
   void forget() {
-    results = [];
+    _unsortedResults = {};
   }
 
   /// Smart search in [where], from a user's [input].
@@ -48,7 +79,7 @@ class Sherlock {
 
     if (where == '*') {
       /// Global search
-      searchWhere(where: where, input: input, regex: regex);
+      _searchWhere(where: where, input: input, regex: regex);
       return;
     }
 
@@ -59,11 +90,11 @@ class Sherlock {
     }
 
     for (var column in where) {
-      searchWhere(where: column, input: input, regex: regex);
+      _searchWhere(where: column, input: input, regex: regex);
     }
   }
 
-  void searchWhere({
+  void _searchWhere({
     required String where,
     required String input,
     required String regex,
@@ -100,19 +131,27 @@ class Sherlock {
 
     /// The [element] is a [Map] following the same structure.
     /// It means that [where] must be a column of [element].
-    for (var element in elements) {
+    for (Element element in elements) {
       currentElement = element;
 
       /// Searches in all columns.
       if (isGlobal) {
-        for (var dyn in element.values) {
-          addWhenContains(dyn: dyn, regex: what);
+        for (var key in element.keys) {
+          addWhenContains(
+            dyn: element[key],
+            regex: what,
+            importance: priorities[key] ?? priorities['*']!,
+          );
         }
 
         continue;
       }
 
-      addWhenContains(dyn: element[where], regex: what);
+      addWhenContains(
+        dyn: element[where],
+        regex: what,
+        importance: priorities[where] ?? priorities['*']!,
+      );
     }
   }
 
@@ -120,18 +159,19 @@ class Sherlock {
   /// [dyn] is either a [String] or a [List] of [String].
   ///
   /// Recursive function for [List].
-  void addWhenContains({required dynamic dyn, required RegExp regex}) {
+  void addWhenContains(
+      {required dynamic dyn, required RegExp regex, required int importance}) {
     if (dyn == null) {
       return;
     }
 
     if (dyn.runtimeType == String) {
       if (dyn.contains(regex)) {
-        addResult();
+        addResult(importance: importance);
       }
     } else if (dyn.runtimeType == List<String>) {
       for (String element in dyn) {
-        addWhenContains(dyn: element, regex: regex);
+        addWhenContains(dyn: element, regex: regex, importance: importance);
       }
     }
   }
@@ -143,14 +183,14 @@ class Sherlock {
       return;
     }
 
-    for (var element in elements) {
+    for (Element element in elements) {
       currentElement = element;
 
       /// Searches in the specified column.
       /// When it does not exist, does nothing.
       var value = currentElement[where];
       if (value != null && value[what] != null) {
-        addResult();
+        addResult(importance: priorities[where] ?? priorities['*']!);
       }
     }
   }
@@ -165,14 +205,16 @@ class Sherlock {
 
     /// The [element] is a [Map] following the same structure.
     /// It means that [where] must be a column of [element].
-    for (var element in elements) {
+    for (Element element in elements) {
       currentElement = element;
 
       /// Checks the boolean expression in all columns.
       if (isGlobal) {
-        for (var dyn in element.values) {
-          if (fn(dyn)) {
-            addResult();
+        for (var key in element.keys) {
+          if (fn(element[key])) {
+            addResult(
+              importance: priorities[key] ?? priorities['*']!,
+            );
           }
         }
 
@@ -188,7 +230,7 @@ class Sherlock {
 
       // The boolean expression is true.
       if (fn(value)) {
-        addResult();
+        addResult(importance: priorities[where] ?? priorities['*']!);
       }
     }
   }
@@ -200,12 +242,20 @@ class Sherlock {
 
   /// Adds the [currentElement] in the [results].
   ///
-  /// Avoid duplicated, does not add the element if it's already in the
-  /// [results].
-  void addResult() {
-    /// Avoid duplicates
-    if (!results.contains(currentElement)) {
-      results.add(currentElement);
+  // /// Avoid duplicates, does not add the element if it's already in the
+  // /// [results].
+  void addResult({required int importance}) {
+    // Avoid duplicates.
+    for (List<Element> results in _unsortedResults.values) {
+      if (results.contains(currentElement)) {
+        return;
+      }
+    }
+
+    if (_unsortedResults[importance] == null) {
+      _unsortedResults[importance] = [currentElement];
+    } else {
+      _unsortedResults[importance]!.add(currentElement);
     }
   }
 }
