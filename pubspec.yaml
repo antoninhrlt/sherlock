@@ -1,7 +1,8 @@
 name: sherlock
 description: Search engine for Flutter. Search in a map list with regular expressions or by smart search for user search.
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/antoninhrlt/sherlock
+license: MIT
 
 environment:
   sdk: '>=2.18.6 <3.0.0'
