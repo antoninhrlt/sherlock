@@ -14,13 +14,13 @@ final activities = [
     'id': 2,
   },
   {
-    'title': 'Extreme VR',
+    'title': 'Extreme VR 2',
     'description': 'VR immersion',
     'id': 3,
   },
   {
-    'title': 'Extreme VR 2',
-    'description': 'New VR immersion',
+    'title': 'Extreme VR',
+    'description': 'VR immersion',
     'id': 4,
   },
   {
@@ -50,14 +50,16 @@ final activities = [
   }
 ];
 
+final sherlock = Sherlock(elements: activities);
+
+/// Tests have to be run one by one, never all together because it's threaded
+/// and they use the same [Sherlock] instance.
 void main() {
   test('hello', () {
     assert(helloSherlock());
   });
 
   test('query', () {
-    final sherlock = Sherlock(elements: activities);
-
     /// All activities where their title contains the word 'vr'.
     sherlock.query(where: 'title', regex: r'vr');
     debugPrint(sherlock.results.toString());
@@ -77,7 +79,7 @@ void main() {
     sherlock.forget();
 
     /// All activities where their description or title contains the word 'cat'.
-    sherlock.query(where: 'title', regex: r'cat');
+    sherlock.query(where: 'title', regex: r'cat', caseSensitive: true);
     sherlock.query(where: 'description', regex: r'cat');
 
     debugPrint(sherlock.results.toString());
@@ -90,14 +92,72 @@ void main() {
 
     sherlock.forget();
 
+    /// Invalid query
+    sherlock.query(where: 'id', regex: r'foo');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+  });
+
+  test('queryExist', () {
     /// All activities where are monday is specified in the opening hours.
-    sherlock.queryExists(where: 'openingHours', what: 'monday');
+    sherlock.queryExist(where: 'openingHours', what: 'monday');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+  });
+
+  test('queryBool', () {
+    /// All activities having a title which does not correspond to 'Parc'.
+    sherlock.queryBool(where: 'title', fn: (value) => value != 'Parc');
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
 
+    /// All activities having at least one column's value corresponding to
+    /// 'VR immersion'.
+    sherlock.queryBool(where: '*', fn: (value) => value == 'VR immersion');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
+    /// All activities starting at 7'o on tuesday.
+    sherlock.queryBool(
+      where: 'openingHours',
+      fn: (value) => value['tuesday'][0] == 7,
+    );
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+  });
+
+  test('queryMatch', () {
     /// All activities having a title corresponding to 'Parc'.
-    sherlock.queryBool(where: 'title', fn: (value) => value == 'Parc');
+    sherlock.queryMatch(where: 'title', match: 'Parc');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
+    /// All activities having at least one column's value corresponding to
+    /// 'VR immersion'.
+    sherlock.queryMatch(where: '*', match: 'VR immersion');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+  });
+
+  test('smartSearch', () {
+    sherlock.search(input: 'cAtS');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
+    sherlock.search(input: 'live online');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
+    sherlock.search(input: 'extreme Vr');
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
