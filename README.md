@@ -3,22 +3,22 @@ Search engine for Flutter. Search in a map list with regular expressions or by s
 
 ## Usage
 Sherlock needs the elements in which he will search.
-A priorities map can be specified for results sorting, but it is not mandatory.
+A map for priorities can be specified for results sorting, but it is not mandatory.
 ```dart
 final foo = [
-    {
-        'col1': 'foo',
-        'col2': ['foo1', 'foo2'],
-        'col3': <non-string value>,
-    },
-    // Other elements...
+  {
+    'col1': 'foo',
+    'col2': ['foo1', 'foo2'],
+    'col3': <non-string value>,
+  },
+  // Other elements...
 ];
 
 /// The bigger it is, the more important it is. 
 final priorities = {
   'col2': 4,
   'col1': 3,
-  '*': 1, // all others
+  '*': 1, // all the others
 };
 
 final sherlock = Sherlock(elements: foo, priorities: priorities);
@@ -116,35 +116,11 @@ See the [examples](#examples).
   // Queries...
   ```
 - ### Queries
-  Prototypes/Definitions
+  Prototypes
   ```dart
-  void query(
-    String where,
-    String regex,
-    bool caseSensitive = false,
-  ) {
-    queryContain(where, regex, caseSensitive);
-  }
-
-  void queryContain(
-    String where,
-    String regex,
-    bool caseSensitive = false,
-  )
-
-  void queryExist(
-    String where, 
-    String what
-  )
-  
-  void queryBool(
-    String where,
-    bool Function(dynamic value) fn,
-  )
-
-  void queryMatch(String where, dynamic match) {
-    queryBool(where: where, fn: (value) => value == match);
-  }
+  // Both functions are equivalent.
+  void query(String where, String regex, bool caseSensitive = false) 
+  void queryContain(String where, String regex, bool caseSensitive = false) 
   ```
   Usages
   ```dart
@@ -154,10 +130,25 @@ See the [examples](#examples).
   /// All elements with 'cat' in at least one of their fields.
   sherlock.query(where: '*', regex: r'cat');
   ```
+  Prototype
+  ```dart
+  /// Searches for elements where [what] exists (is not null) in the column [where].
+  void queryExist(String where, String what)
+  ```
+  Usage
   ```dart
   /// All activities where monday is specified in the opening hours.
   sherlock.queryExist(where: 'openingHours', what: 'monday');
   ```
+  Prototypes
+  ```dart
+  void queryBool(String where, bool Function(dynamic value) fn)
+
+  void queryMatch(String where, dynamic match) {
+    queryBool(where: where, fn: (value) => value == match);
+  }
+  ```
+  Usages
   ```dart
   /// All activities having a title which does not correspond to 'Parc'.
   sherlock.queryBool(where: 'title', fn: (value) => value != 'Parc');
