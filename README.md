@@ -174,6 +174,7 @@ See the [examples](#examples).
   ```
 
 - Smart search
+
   Prototype
   ```dart
   void search(dynamic where, String input)
