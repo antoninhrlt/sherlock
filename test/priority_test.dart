@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sherlock/priority.dart';
+import 'package:sherlock/types.dart';
 import 'package:sherlock/sherlock.dart';
 
 void main() {
