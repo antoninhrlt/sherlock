@@ -6,3 +6,5 @@
   Sort results from a priority map. More information in the readme file.
 - # 0.0.4
   Smart search searches matches first with all the input keywords. The parameter '*' is no longer mandatory in the priority map.
+- # 0.0.5
+  Undo buggy change on the way to avoid duplicates. 
