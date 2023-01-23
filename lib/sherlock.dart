@@ -198,7 +198,7 @@ class Sherlock {
       /// Searches in all columns.
       if (isGlobal) {
         for (var key in element.keys) {
-          addWhenContains(
+          _addWhenContains(
             dyn: element[key],
             regex: what,
             importance: priorities[key] ?? priorities['*']!,
@@ -209,7 +209,7 @@ class Sherlock {
       }
 
       /// Searches in the specified column.
-      addWhenContains(
+      _addWhenContains(
         dyn: element[where],
         regex: what,
         importance: priorities[where] ?? priorities['*']!,
@@ -223,7 +223,7 @@ class Sherlock {
   ///
   /// When [dyn] is a [List] object, the function is called recursively for all
   /// the strings in the list.
-  void addWhenContains({
+  void _addWhenContains({
     required dynamic dyn,
     required RegExp regex,
     required int importance,
@@ -242,10 +242,8 @@ class Sherlock {
     } else if (dyn.runtimeType == List<String>) {
       /// Calls this function recursively for all the elements of the list.
       for (String element in dyn) {
-        addWhenContains(dyn: element, regex: regex, importance: importance);
+        _addWhenContains(dyn: element, regex: regex, importance: importance);
       }
-    } else {
-      throw TypeError();
     }
   }
 
@@ -314,25 +312,17 @@ class Sherlock {
     queryBool(where: where, fn: (value) => value == match);
   }
 
-  /// "Should we go further in the search or is the element already added to
-  /// the results ?".
-  ///
-  /// To be called at the very start of the loop over [elements].
-  bool shouldContinue({required Element element}) {
-    for (List<Element> results in _unsortedResults.values) {
-      if (results.contains(_currentElement)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   /// Adds the [_currentElement] in the [results].
   ///
   /// There should be duplicated since [shouldContinue] is used in loops over
   /// [elements].
   void addResult({required int importance}) {
+    for (List<Element> results in _unsortedResults.values) {
+      if (results.contains(_currentElement)) {
+        return;
+      }
+    }
+
     /// There is/are already element/s of this importance in the results.
     if (_unsortedResults[importance] != null) {
       /// Adds the element to the results.
