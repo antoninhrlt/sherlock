@@ -112,7 +112,7 @@ class Sherlock {
   /// columns) or a list of columns.
   void search({required dynamic where, required String input}) {
     /// The type of [where] can be either a list of keywords or '*'.
-    if ((where.runtimeType != List<String>) || (where.runtimeType != String)) {
+    if ((where.runtimeType != List<String>) && (where.runtimeType != String)) {
       throw TypeError();
     } else if (where.runtimeType == String && where != '*') {
       /// [String] type is only accepted when [where] equals '*'.
