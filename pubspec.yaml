@@ -1,6 +1,6 @@
 name: sherlock
 description: Search a list of maps and order the results based on a given priority map, and by match level. Smart search for user search.
-version: 0.0.3
+version: 0.0.4
 homepage: https://github.com/antoninhrlt/sherlock
 license: MIT
 
