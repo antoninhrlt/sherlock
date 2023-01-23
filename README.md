@@ -1,8 +1,8 @@
 # sherlock
-Search engine for Flutter. Search in a map list with regular expressions or by smart search for user search
+Search a list of maps and order the results based on a given priority map, and by match level. Smart search for user search
 
 ## Usage
-Sherlock needs the elements in which he will search.
+Sherlock needs the elements in which it (he?) will search.
 A map for priorities can be specified for results sorting, but it is not mandatory.
 ```dart
 final foo = [
@@ -47,23 +47,23 @@ See the [examples](#examples).
   /// They also have an ID.
   List<Map<String, dynamic>> users = [
     {
-        'firstName': 'Finn',
-        'lastName': 'Thornton',
-        'city': 'Edinburgh',
-        'id': 1, // other types than string can be used.
+      'firstName': 'Finn',
+      'lastName': 'Thornton',
+      'city': 'Edinburgh',
+      'id': 1, // other types than string can be used.
     },
     {
-        'firstName': 'Suz',
-        'lastName': 'Judy',
-        'city': 'Paris',
-        'id': 2,
+      'firstName': 'Suz',
+      'lastName': 'Judy',
+      'city': 'Paris',
+      'id': 2,
     },
     {
-        'firstName': 'Suz',
-        'lastName': 'Crystal',
-        'city': 'Edinburgh',
-        'hobbies': ['sport', 'programming'], // string lists can be used.
-        'id': 3,
+      'firstName': 'Suz',
+      'lastName': 'Crystal',
+      'city': 'Edinburgh',
+      'hobbies': ['sport', 'programming'], // string lists can be used.
+      'id': 3,
     },
   ];
 
@@ -129,6 +129,9 @@ See the [examples](#examples).
 
   /// All elements with 'cat' in at least one of their fields.
   sherlock.query(where: '*', regex: r'cat');
+
+  /// All elements with both words 'world' and 'pretty' in their descriptions.
+  sherlock.query(where: 'description', regex: r'(?=.*pretty)(?=.*world).*');
   ```
   Prototype
   ```dart
