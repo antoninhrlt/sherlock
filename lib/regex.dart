@@ -1,3 +1,7 @@
+/// Creates regex from a list of keywords.
+///
+/// Provides static functions rather than instancing a new [RegexHelper] object
+/// when need it.
 class RegexHelper {
   /// Returns a regex [String] matching with all the words from the [keywords].
   static String all({required List<String> keywords}) {

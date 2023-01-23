@@ -1,6 +1,6 @@
 library sherlock;
 
-import 'package:sherlock/priority.dart';
+import 'package:sherlock/types.dart';
 import 'package:sherlock/regex.dart';
 
 /// Returns `true`. Can be used to test if "sherlock" is correctly installed.
@@ -8,54 +8,101 @@ bool helloSherlock() {
   return true;
 }
 
-typedef Element = Map<String, dynamic>;
-typedef Column = Map<String, dynamic>;
-typedef PointsMap = Map<int, List<Element>>;
-
 /// The search functions add the found elements in [results]. No function
 /// returns a result.
 class Sherlock {
   /// Where to search.
   final List<Element> elements;
 
-  /// Column priorities to sort results.
-  PriorityMap priorities;
+  /// Column priorities to sort the results.
+  final PriorityMap priorities;
 
-  /// Points map of the results.
-  PointsMap _unsortedResults;
+  /// Results are wrapped in a map of points. When they have priority 5 for
+  /// example, they are added in [_unsortedResults]`[5]`
+  Map<int, List<Element>> _unsortedResults;
 
-  Element currentElement;
+  /// The current manipulated element. Used in loops by the query functions.
+  Element _currentElement;
 
   /// Sorted research findings.
   List<Element> get results {
     List<Element> sortedResults = [];
 
-    for (int resultKey in _unsortedResults.keys.toList()
-      ..sort((a, b) => -a.compareTo(b))) {
-      for (Element result in _unsortedResults[resultKey]!) {
-        sortedResults.add(result);
-      }
+    /// Orders the [_unsortedResults]' keys by points.
+    /// The keys are actually the points of each column.
+    /// Greater points are above the smaller points.
+    var sortedKeys = _unsortedResults.keys.toList()
+      ..sort((a, b) => -a.compareTo(b));
+
+    for (int resultKey in sortedKeys) {
+      // Adds all the results ranged in this column.
+      sortedResults.addAll(_unsortedResults[resultKey]!);
     }
 
+    /// Finally, returns the results sorted by points.
+    /// Results with greatest points are above.
     return sortedResults;
   }
 
+  /// Unsorted research findings.
   List<Element> get unsortedResults {
     List<Element> results = [];
+
+    /// Extracts the results from [_unsortedResults] to get a list instead of a
+    /// map. Points don't matter.
     _unsortedResults.forEach((_, elements) => results.addAll(elements));
     return results;
   }
 
+  /// Creates a [Sherlock] instance that will search in [elements].
+  ///
+  /// The parameter [priorities] can be provided to sort the results.
+  /// The default set value for `'*'` is 1. If some columns are set with an
+  /// importance smaller than 1, they will be less important than all the other
+  /// non-specified columns.
+  ///
+  /// Basically :
+  /// ```dart
+  /// final elements = [
+  ///   {
+  ///     'col1': 'foo1',
+  ///     'col2': 'foo2',
+  ///     'col3': 'foo3",
+  ///   },
+  ///   // ...
+  /// ];
+  ///
+  /// final priorities = {
+  ///   'col1': 2, // 'col1' is more important than the other columns.
+  ///   'col2': 0, // 'col2' is less important than the other columns.
+  ///   // 'col3' has the priority set to 1.
+  /// };
+  ///
+  /// final prioritiesWithSpecifiedStar = {
+  ///   'col1': 3, // 'col1' is more important the other columns.
+  ///   'col2': 1, // 'col2' is less important than the other columns
+  ///   '*': 2, // 'col3' has the priority set to 2.
+  /// };
+  /// ```
   Sherlock({required this.elements, this.priorities = const {'*': 1}})
       : _unsortedResults = {},
-        currentElement = {};
+        _currentElement = {} {
+    /// Specifies the default priority to 1 when not defined, permitting to do :
+    /// ```dart
+    /// priorities['*']!
+    /// ```
+    /// Without being afraid of null exceptions.
+    if (priorities['*'] == null) {
+      priorities['*'] = 1;
+    }
+  }
 
   /// Resets the [results].
   void forget() {
     _unsortedResults = {};
   }
 
-  /// Smart search in [where], from a user's [input].
+  /// Smart search in [where], from a natural user [input].
   ///
   /// At first, adds perfect matches, to make them on top of the results list.
   /// Then, searches the matches for all keywords of the user [input].
@@ -64,52 +111,62 @@ class Sherlock {
   /// The [where] parameter is either equal to `'*'` for global search (in all
   /// columns) or a list of columns.
   void search({required dynamic where, required String input}) {
+    /// The type of [where] can be either a list of keywords or '*'.
+    if ((where.runtimeType != List<String>) || (where.runtimeType != String)) {
+      throw TypeError();
+    } else if (where.runtimeType == String && where != '*') {
+      /// [String] type is only accepted when [where] equals '*'.
+      throw Error();
+    }
+
     final inputKeywords = input.split(' ');
 
     /// Searches for all the keywords at once.
     final regexAll = RegexHelper.all(keywords: inputKeywords);
 
-    /// For match with any word in the keywords.
+    /// Searches any word from the keywords.
     final regexAny = RegexHelper.any(keywords: inputKeywords);
 
+    /// Searches globally.
     if (where == '*') {
-      /// Global search
-      _searchWhere(where: where, input: input, regex: regexAll);
-      _searchWhere(where: where, input: input, regex: regexAny);
+      queryBool(
+        where: where,
+        fn: (value) => (value.runtimeType == String)
+            ? value.toLowerCase() == input.toLowerCase()
+            : false,
+      );
+
+      query(where: where, regex: regexAll);
+      query(where: where, regex: regexAny);
       return;
     }
 
-    /// Searches in all specified columns.
+    /// Separate the loops
 
-    if (where.runtimeType != List<String>) {
-      throw TypeError();
+    /// Searches perfect matches.
+    for (var column in where) {
+      /// The case does not matter.
+      queryBool(
+        where: column,
+        fn: (value) => (value.runtimeType == String)
+            ? value.toLowerCase() == input.toLowerCase()
+            : false,
+      );
+    }
+
+    /// Searches in specified columns.
+    for (var column in where) {
+      /// Searches for all the keywords at once.
+      query(where: column, regex: regexAll);
     }
 
     for (var column in where) {
-      _searchWhere(where: column, input: input, regex: regexAll);
-    }
-
-    for (var column in where) {
-      _searchWhere(where: column, input: input, regex: regexAny);
+      /// Searches any word from the keywords.
+      query(where: column, regex: regexAny);
     }
   }
 
-  void _searchWhere({
-    required String where,
-    required String input,
-    required String regex,
-  }) {
-    /// Matches, no matter the case.
-    queryBool(
-      where: where,
-      fn: (value) => (value.runtimeType == String)
-          ? value.toLowerCase() == input.toLowerCase()
-          : false,
-    );
-
-    query(where: where, regex: regex);
-  }
-
+  /// Equivalent to [queryContain].
   void query({
     required String where,
     required String regex,
@@ -118,12 +175,16 @@ class Sherlock {
     queryContain(where: where, regex: regex, caseSensitive: caseSensitive);
   }
 
-  /// Searches for values matching with the [regex], in column [where].
+  /// Searches for values which contain a value matching with the [regex], in
+  /// [where].
+  ///
+  /// The parameter [where] is either '*' (global search) or a column key.
   void queryContain({
     required String where,
     required String regex,
     bool caseSensitive = false,
   }) {
+    /// Creates the [RegExp] from the given [String] regex.
     var what = RegExp(regex, caseSensitive: caseSensitive);
 
     /// Whether the search is to be performed in all columns
@@ -132,7 +193,7 @@ class Sherlock {
     /// The [element] is a [Map] following the same structure.
     /// It means that [where] must be a column of [element].
     for (Element element in elements) {
-      currentElement = element;
+      _currentElement = element;
 
       /// Searches in all columns.
       if (isGlobal) {
@@ -147,6 +208,7 @@ class Sherlock {
         continue;
       }
 
+      /// Searches in the specified column.
       addWhenContains(
         dyn: element[where],
         regex: what,
@@ -155,40 +217,51 @@ class Sherlock {
     }
   }
 
-  /// Searches if a matching expression of [regex] is contained in [dyn], when
-  /// [dyn] is either a [String] or a [List] of [String].
+  /// Searches if a matching expression of [regex] is contained in [dyn],
   ///
-  /// Recursive function for [List].
-  void addWhenContains(
-      {required dynamic dyn, required RegExp regex, required int importance}) {
+  /// The parameter [dyn] is either a [String] or a list of [String].
+  ///
+  /// When [dyn] is a [List] object, the function is called recursively for all
+  /// the strings in the list.
+  void addWhenContains({
+    required dynamic dyn,
+    required RegExp regex,
+    required int importance,
+  }) {
+    /// Nothing cannot contains something.
     if (dyn == null) {
       return;
     }
 
     if (dyn.runtimeType == String) {
+      /// The string contains a value matching with the [regex], adds the current
+      /// element to the results.
       if (dyn.contains(regex)) {
         addResult(importance: importance);
       }
     } else if (dyn.runtimeType == List<String>) {
+      /// Calls this function recursively for all the elements of the list.
       for (String element in dyn) {
         addWhenContains(dyn: element, regex: regex, importance: importance);
       }
+    } else {
+      throw TypeError();
     }
   }
 
   /// Searches for values when a key exists for [what] in [where].
   void queryExist({required String where, required String what}) {
-    /// Cannot be global
+    /// Cannot be global.
     if (where == '*') {
       return;
     }
 
     for (Element element in elements) {
-      currentElement = element;
+      _currentElement = element;
 
       /// Searches in the specified column.
       /// When it does not exist, does nothing.
-      var value = currentElement[where];
+      var value = _currentElement[where];
       if (value != null && value[what] != null) {
         addResult(importance: priorities[where] ?? priorities['*']!);
       }
@@ -206,11 +279,12 @@ class Sherlock {
     /// The [element] is a [Map] following the same structure.
     /// It means that [where] must be a column of [element].
     for (Element element in elements) {
-      currentElement = element;
+      _currentElement = element;
 
       /// Checks the boolean expression in all columns.
       if (isGlobal) {
         for (var key in element.keys) {
+          /// The boolean expression is true.
           if (fn(element[key])) {
             addResult(
               importance: priorities[key] ?? priorities['*']!,
@@ -240,22 +314,34 @@ class Sherlock {
     queryBool(where: where, fn: (value) => value == match);
   }
 
-  /// Adds the [currentElement] in the [results].
+  /// "Should we go further in the search or is the element already added to
+  /// the results ?".
   ///
-  // /// Avoid duplicates, does not add the element if it's already in the
-  // /// [results].
-  void addResult({required int importance}) {
-    // Avoid duplicates.
+  /// To be called at the very start of the loop over [elements].
+  bool shouldContinue({required Element element}) {
     for (List<Element> results in _unsortedResults.values) {
-      if (results.contains(currentElement)) {
-        return;
+      if (results.contains(_currentElement)) {
+        return false;
       }
     }
 
-    if (_unsortedResults[importance] == null) {
-      _unsortedResults[importance] = [currentElement];
-    } else {
-      _unsortedResults[importance]!.add(currentElement);
+    return true;
+  }
+
+  /// Adds the [_currentElement] in the [results].
+  ///
+  /// There should be duplicated since [shouldContinue] is used in loops over
+  /// [elements].
+  void addResult({required int importance}) {
+    /// There is/are already element/s of this importance in the results.
+    if (_unsortedResults[importance] != null) {
+      /// Adds the element to the results.
+      _unsortedResults[importance]!.add(_currentElement);
+      return;
     }
+
+    /// Initialises a list for elements of this importance, with the current
+    /// element as first element of this list.
+    _unsortedResults[importance] = [_currentElement];
   }
 }
