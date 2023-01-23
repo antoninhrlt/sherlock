@@ -8,3 +8,5 @@
   Smart search searches matches first with all the input keywords. The parameter '*' is no longer mandatory in the priority map.
 - # 0.0.5
   Undo buggy change on the way to avoid duplicates. 
+- # 0.0.6
+  Fix wrong condition in type check.
