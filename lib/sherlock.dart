@@ -1,8 +1,7 @@
 library sherlock;
 
-import 'dart:ffi';
-
 import 'package:sherlock/priority.dart';
+import 'package:sherlock/regex.dart';
 
 /// Returns `true`. Can be used to test if "sherlock" is correctly installed.
 bool helloSherlock() {
@@ -58,28 +57,25 @@ class Sherlock {
 
   /// Smart search in [where], from a user's [input].
   ///
-  /// The value [where] can be either a [String] (whe equal to `'*'`) or a
-  /// [List] of [String] being the columns where to search.
+  /// At first, adds perfect matches, to make them on top of the results list.
+  /// Then, searches the matches for all keywords of the user [input].
+  /// Finally, searches match for any keyword of the user [input].
   ///
-  /// Adds the perfect matches.
-  /// Creates a regex from the [input] and searches in specified columns.
+  /// The [where] parameter is either equal to `'*'` for global search (in all
+  /// columns) or a list of columns.
   void search({required dynamic where, required String input}) {
-    /// Creates a regex to find other elements corresponding to the search.
-    String regex = r'(';
+    final inputKeywords = input.split(' ');
 
-    var keywords = input.split(' ');
-    for (var keyword in keywords) {
-      regex += keyword;
-      if (keyword != keywords.last) {
-        regex += r'|';
-      }
-    }
+    /// Searches for all the keywords at once.
+    final regexAll = RegexHelper.all(keywords: inputKeywords);
 
-    regex += r')';
+    /// For match with any word in the keywords.
+    final regexAny = RegexHelper.any(keywords: inputKeywords);
 
     if (where == '*') {
       /// Global search
-      _searchWhere(where: where, input: input, regex: regex);
+      _searchWhere(where: where, input: input, regex: regexAll);
+      _searchWhere(where: where, input: input, regex: regexAny);
       return;
     }
 
@@ -90,7 +86,11 @@ class Sherlock {
     }
 
     for (var column in where) {
-      _searchWhere(where: column, input: input, regex: regex);
+      _searchWhere(where: column, input: input, regex: regexAll);
+    }
+
+    for (var column in where) {
+      _searchWhere(where: column, input: input, regex: regexAny);
     }
   }
 
