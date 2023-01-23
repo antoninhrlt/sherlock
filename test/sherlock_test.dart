@@ -98,6 +98,12 @@ void main() {
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
+
+    /// All elements with both words 'live' and 'stream' in their descriptions.
+    sherlock.query(where: 'description', regex: r'(?=.*live)(?=.*stream).*');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
   });
 
   test('queryExist', () {
@@ -147,28 +153,6 @@ void main() {
     /// All activities having at least one column's value corresponding to
     /// 'VR immersion'.
     sherlock.queryMatch(where: '*', match: 'VR immersion');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
-  });
-
-  test('smartSearch', () {
-    sherlock.search(where: '*', input: 'cAtS');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
-
-    sherlock.search(where: '*', input: 'live online');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
-
-    sherlock.search(where: '*', input: 'extreme Vr');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
-
-    sherlock.search(where: ['title', 'categories'], input: 'cats');
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
