@@ -17,6 +17,9 @@ class Sherlock {
   /// Column priorities to sort the results.
   final PriorityMap priorities;
 
+  /// Default column priorities
+  static PriorityMap _defaults = {'*': 1};
+
   /// Results are wrapped in a map of points. When they have priority 5 for
   /// example, they are added in [_unsortedResults]`[5]`
   Map<int, List<Element>> _unsortedResults;
@@ -83,18 +86,10 @@ class Sherlock {
   ///   '*': 2, // 'col3' has the priority set to 2.
   /// };
   /// ```
-  Sherlock({required this.elements, this.priorities = const {'*': 1}})
+  Sherlock({required this.elements, priorities = const {'*': 1}})
       : _unsortedResults = {},
-        _currentElement = {} {
-    /// Specifies the default priority to 1 when not defined, permitting to do :
-    /// ```dart
-    /// priorities['*']!
-    /// ```
-    /// Without being afraid of null exceptions.
-    if (priorities['*'] == null) {
-      priorities['*'] = 1;
-    }
-  }
+        _currentElement = {},
+        priorities = {..._defaults, ...priorities};
 
   /// Resets the [results].
   void forget() {
