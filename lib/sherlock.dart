@@ -31,8 +31,7 @@ class Sherlock {
     /// Orders the [_unsortedResults]' keys by points.
     /// The keys are actually the points of each column.
     /// Greater points are above the smaller points.
-    var sortedKeys = _unsortedResults.keys.toList()
-      ..sort((a, b) => -a.compareTo(b));
+    var sortedKeys = _unsortedResults.keys.toList()..sort((a, b) => -a.compareTo(b));
 
     for (int resultKey in sortedKeys) {
       // Adds all the results ranged in this column.
@@ -110,7 +109,7 @@ class Sherlock {
   ///
   /// The [where] parameter is either equal to `'*'` for global search (in all
   /// columns) or a list of columns.
-  void search({required dynamic where, required String input}) {
+  void search({dynamic where = "*", required String input}) {
     /// The type of [where] can be either a list of keywords or '*'.
     if ((where.runtimeType != List<String>) && (where.runtimeType != String)) {
       throw TypeError();
@@ -131,9 +130,7 @@ class Sherlock {
     if (where == '*') {
       queryBool(
         where: where,
-        fn: (value) => (value.runtimeType == String)
-            ? value.toLowerCase() == input.toLowerCase()
-            : false,
+        fn: (value) => (value.runtimeType == String) ? value.toLowerCase() == input.toLowerCase() : false,
       );
 
       query(where: where, regex: regexAll);
@@ -148,9 +145,7 @@ class Sherlock {
       /// The case does not matter.
       queryBool(
         where: column,
-        fn: (value) => (value.runtimeType == String)
-            ? value.toLowerCase() == input.toLowerCase()
-            : false,
+        fn: (value) => (value.runtimeType == String) ? value.toLowerCase() == input.toLowerCase() : false,
       );
     }
 
@@ -168,7 +163,7 @@ class Sherlock {
 
   /// Equivalent to [queryContain].
   void query({
-    required String where,
+    String where = "*",
     required String regex,
     bool caseSensitive = false,
   }) {
@@ -180,7 +175,7 @@ class Sherlock {
   ///
   /// The parameter [where] is either '*' (global search) or a column key.
   void queryContain({
-    required String where,
+    String where = "*",
     required String regex,
     bool caseSensitive = false,
   }) {
@@ -268,7 +263,7 @@ class Sherlock {
 
   /// Searches for a value corresponding to a boolean expression in [where].
   void queryBool({
-    required String where,
+    String where = "*",
     required bool Function(dynamic value) fn,
   }) {
     /// Whether the search is to be performed in all columns
@@ -308,7 +303,7 @@ class Sherlock {
   }
 
   /// Searches for a value which is equal to [match], in [where].
-  void queryMatch({required String where, required dynamic match}) {
+  void queryMatch({String where = "*", required dynamic match}) {
     queryBool(where: where, fn: (value) => value == match);
   }
 
