@@ -10,3 +10,5 @@
   Undo buggy change on the way to avoid duplicates. 
 - # 0.0.6
   Fix wrong condition in type check.
+- # 0.0.7
+  Fix bug with UnsupportedError. Make parameter 'where' optional.
