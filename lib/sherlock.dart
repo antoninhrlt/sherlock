@@ -168,16 +168,6 @@ class Sherlock {
     String where = "*",
     required String regex,
     bool caseSensitive = false,
-  }) {}
-
-  /// Searches for values which contain a value matching with the [regex], in
-  /// [where].
-  ///
-  /// The parameter [where] is either '*' (global search) or a column key.
-  void queryContain({
-    String where = "*",
-    required String regex,
-    bool caseSensitive = false,
   }) {
     /// Creates the [RegExp] from the given [String] regex.
     var what = RegExp(regex, caseSensitive: caseSensitive);
@@ -193,10 +183,11 @@ class Sherlock {
       /// Searches in all columns.
       if (isGlobal) {
         for (var key in element.keys) {
-          _addWhenContains(
+          _addWhen(
             dyn: element[key],
             regex: what,
             importance: priorities[key] ?? priorities['*']!,
+            fn: ((string, regex) => regex.hasMatch(string)),
           );
         }
 
@@ -204,26 +195,28 @@ class Sherlock {
       }
 
       /// Searches in the specified column.
-      _addWhenContains(
+      _addWhen(
         dyn: element[where],
         regex: what,
         importance: priorities[where] ?? priorities['*']!,
+        fn: ((string, regex) => regex.hasMatch(string)),
       );
     }
   }
 
-  /// Searches if a matching expression of [regex] is contained in [dyn],
+  /// Calls the [fn] function with [dyn] when it is a [String] and [regex]. If
+  /// the returned boolean value is `true`: the element is added to the results.
   ///
   /// The parameter [dyn] is either a [String] or a list of [String].
   ///
   /// When [dyn] is a [List] object, the function is called recursively for all
   /// the strings in the list.
-  void _addWhenContains({
+  void _addWhen({
     required dynamic dyn,
     required RegExp regex,
     required int importance,
+    required bool Function(String string, RegExp regex) fn,
   }) {
-    /// Nothing cannot contains something.
     if (dyn == null) {
       return;
     }
@@ -231,13 +224,13 @@ class Sherlock {
     if (dyn.runtimeType == String) {
       /// The string contains a value matching with the [regex], adds the current
       /// element to the results.
-      if (dyn.contains(regex)) {
-        addResult(importance: importance);
+      if (fn(dyn, regex)) {
+        _addResult(importance: importance);
       }
     } else if (dyn.runtimeType == List<String>) {
       /// Calls this function recursively for all the elements of the list.
       for (String element in dyn) {
-        _addWhenContains(dyn: element, regex: regex, importance: importance);
+        _addWhen(dyn: element, regex: regex, importance: importance, fn: fn);
       }
     }
   }
@@ -256,7 +249,7 @@ class Sherlock {
       /// When it does not exist, does nothing.
       var value = _currentElement[where];
       if (value != null && value[what] != null) {
-        addResult(importance: priorities[where] ?? priorities['*']!);
+        _addResult(importance: priorities[where] ?? priorities['*']!);
       }
     }
   }
@@ -279,7 +272,7 @@ class Sherlock {
         for (var key in element.keys) {
           /// The boolean expression is true.
           if (fn(element[key])) {
-            addResult(
+            _addResult(
               importance: priorities[key] ?? priorities['*']!,
             );
           }
@@ -297,7 +290,7 @@ class Sherlock {
 
       // The boolean expression is true.
       if (fn(value)) {
-        addResult(importance: priorities[where] ?? priorities['*']!);
+        _addResult(importance: priorities[where] ?? priorities['*']!);
       }
     }
   }
@@ -348,7 +341,7 @@ class Sherlock {
   ///
   /// There should be duplicated since [shouldContinue] is used in loops over
   /// [elements].
-  void addResult({required int importance}) {
+  void _addResult({required int importance}) {
     for (List<Element> results in _unsortedResults.values) {
       if (results.contains(_currentElement)) {
         return;

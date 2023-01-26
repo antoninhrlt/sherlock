@@ -61,6 +61,12 @@ void main() {
   });
 
   test('query', () {
+    /// All activities where their title is the string 'Extreme VR'.
+    sherlock.query(where: 'title', regex: r'^Extreme VR$');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
     /// All activities where their title contains the word 'vr'.
     sherlock.query(where: 'title', regex: r'vr');
     debugPrint(sherlock.results.toString());
