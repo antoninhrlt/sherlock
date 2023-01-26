@@ -150,6 +150,13 @@ void main() {
 
     sherlock.forget();
 
+    /// All activities having a title corresponding to 'parc', no matter
+    /// the case.
+    sherlock.queryMatch(where: 'title', match: 'pArC', caseSensitive: true);
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
     /// All activities having at least one column's value corresponding to
     /// 'VR immersion'.
     sherlock.queryMatch(where: '*', match: 'VR immersion');

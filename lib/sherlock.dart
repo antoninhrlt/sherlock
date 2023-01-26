@@ -34,7 +34,8 @@ class Sherlock {
     /// Orders the [_unsortedResults]' keys by points.
     /// The keys are actually the points of each column.
     /// Greater points are above the smaller points.
-    var sortedKeys = _unsortedResults.keys.toList()..sort((a, b) => -a.compareTo(b));
+    var sortedKeys = _unsortedResults.keys.toList()
+      ..sort((a, b) => -a.compareTo(b));
 
     for (int resultKey in sortedKeys) {
       // Adds all the results ranged in this column.
@@ -125,7 +126,9 @@ class Sherlock {
     if (where == '*') {
       queryBool(
         where: where,
-        fn: (value) => (value.runtimeType == String) ? value.toLowerCase() == input.toLowerCase() : false,
+        fn: (value) => (value.runtimeType == String)
+            ? value.toLowerCase() == input.toLowerCase()
+            : false,
       );
 
       query(where: where, regex: regexAll);
@@ -140,7 +143,9 @@ class Sherlock {
       /// The case does not matter.
       queryBool(
         where: column,
-        fn: (value) => (value.runtimeType == String) ? value.toLowerCase() == input.toLowerCase() : false,
+        fn: (value) => (value.runtimeType == String)
+            ? value.toLowerCase() == input.toLowerCase()
+            : false,
       );
     }
 
@@ -156,14 +161,14 @@ class Sherlock {
     }
   }
 
-  /// Equivalent to [queryContain].
+  /// Searches for values matching with the [regex], in [where].
+  ///
+  /// The parameter [where] is either '*' (global search) or a column key.
   void query({
     String where = "*",
     required String regex,
     bool caseSensitive = false,
-  }) {
-    queryContain(where: where, regex: regex, caseSensitive: caseSensitive);
-  }
+  }) {}
 
   /// Searches for values which contain a value matching with the [regex], in
   /// [where].
@@ -298,7 +303,44 @@ class Sherlock {
   }
 
   /// Searches for a value which is equal to [match], in [where].
-  void queryMatch({String where = "*", required dynamic match}) {
+  ///
+  /// The optional parameter [caseSensitive] can be used only when [match] is a
+  /// [String] and the matching value is also a string.
+  void queryMatch({
+    String where = "*",
+    required dynamic match,
+    bool? caseSensitive,
+  }) {
+    bool stringComparison = false;
+
+    /// Parameter [caseSensitive] is set. The comparison must be between two
+    /// strings.
+    if (caseSensitive != null) {
+      if (match.runtimeType != String) {
+        throw TypeError();
+      }
+
+      stringComparison = true;
+    }
+
+    /// It is case sensitive, both [value] and [match] must be lowercased in
+    /// order to compare no matter the case.
+    if (stringComparison && caseSensitive!) {
+      queryBool(
+        where: where,
+        fn: (value) {
+          /// Cannot lowercase a non-string value.
+          if (value.runtimeType != String) {
+            throw TypeError();
+          }
+
+          return value.toLowerCase() == match.toLowerCase();
+        },
+      );
+      return;
+    }
+
+    /// Dynamic comparison.
     queryBool(where: where, fn: (value) => value == match);
   }
 
