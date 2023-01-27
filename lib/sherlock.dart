@@ -1,5 +1,6 @@
 library sherlock;
 
+import 'package:sherlock/result.dart';
 import 'package:sherlock/types.dart';
 import 'package:sherlock/regex.dart';
 
@@ -18,83 +19,38 @@ class Sherlock {
   final PriorityMap priorities;
 
   /// Default column priorities
-  static PriorityMap _defaults = {'*': 1};
+  static final PriorityMap _defaults = {'*': 1};
 
-  /// Results are wrapped in a map of points. When they have priority 5 for
-  /// example, they are added in [_unsortedResults]`[5]`
-  Map<int, List<Element>> _unsortedResults;
+  /// The result elements are wrapped into [Result]s.
+  List<Result> unsortedResults;
 
   /// The current manipulated element. Used in loops by the query functions.
   Element _currentElement;
 
   /// Sorted research findings.
   List<Element> get results {
-    List<Element> sortedResults = [];
+    /// Gets the results sorted by points.
+    var sortedResults = unsortedResults
+      ..sort((a, b) => -a.importance.compareTo(b.importance));
 
-    /// Orders the [_unsortedResults]' keys by points.
-    /// The keys are actually the points of each column.
-    /// Greater points are above the smaller points.
-    var sortedKeys = _unsortedResults.keys.toList()
-      ..sort((a, b) => -a.compareTo(b));
-
-    for (int resultKey in sortedKeys) {
-      // Adds all the results ranged in this column.
-      sortedResults.addAll(_unsortedResults[resultKey]!);
-    }
-
-    /// Finally, returns the results sorted by points.
+    /// Returns a list of [Element], not results.
     /// Results with greatest points are above.
-    return sortedResults;
+    return sortedResults.map((e) => e.element).toList();
   }
 
-  /// Unsorted research findings.
-  List<Element> get unsortedResults {
-    List<Element> results = [];
-
-    /// Extracts the results from [_unsortedResults] to get a list instead of a
-    /// map. Points don't matter.
-    _unsortedResults.forEach((_, elements) => results.addAll(elements));
-    return results;
-  }
-
-  /// Creates a [Sherlock] instance that will search in [elements].
+  /// Creates a [Sherlock] instance that will search in [elements] with a given
+  /// map of [priorities].
   ///
-  /// The parameter [priorities] can be provided to sort the results.
-  /// The default set value for `'*'` is 1. If some columns are set with an
-  /// importance smaller than 1, they will be less important than all the other
-  /// non-specified columns.
-  ///
-  /// Basically :
-  /// ```dart
-  /// final elements = [
-  ///   {
-  ///     'col1': 'foo1',
-  ///     'col2': 'foo2',
-  ///     'col3': 'foo3",
-  ///   },
-  ///   // ...
-  /// ];
-  ///
-  /// final priorities = {
-  ///   'col1': 2, // 'col1' is more important than the other columns.
-  ///   'col2': 0, // 'col2' is less important than the other columns.
-  ///   // 'col3' has the priority set to 1.
-  /// };
-  ///
-  /// final prioritiesWithSpecifiedStar = {
-  ///   'col1': 3, // 'col1' is more important the other columns.
-  ///   'col2': 1, // 'col2' is less important than the other columns
-  ///   '*': 2, // 'col3' has the priority set to 2.
-  /// };
-  /// ```
+  /// The parameter [priorities] is optional however the default value for '*'
+  /// is 1, and if a map of [priorities] is given, '*' will be set to 1.
   Sherlock({required this.elements, priorities = const {'*': 1}})
-      : _unsortedResults = {},
+      : unsortedResults = [],
         _currentElement = {},
         priorities = {..._defaults, ...priorities};
 
   /// Resets the [results].
   void forget() {
-    _unsortedResults = {};
+    unsortedResults = [];
   }
 
   /// Smart search in [where], from a natural user [input].
@@ -342,21 +298,19 @@ class Sherlock {
   /// There should be duplicated since [shouldContinue] is used in loops over
   /// [elements].
   void _addResult({required int importance}) {
-    for (List<Element> results in _unsortedResults.values) {
-      if (results.contains(_currentElement)) {
+    /// Avoid duplicates
+    for (Result e in unsortedResults) {
+      if (e.element == _currentElement) {
         return;
       }
     }
 
-    /// There is/are already element/s of this importance in the results.
-    if (_unsortedResults[importance] != null) {
-      /// Adds the element to the results.
-      _unsortedResults[importance]!.add(_currentElement);
-      return;
-    }
-
-    /// Initialises a list for elements of this importance, with the current
-    /// element as first element of this list.
-    _unsortedResults[importance] = [_currentElement];
+    /// Adds the [_currentElement] to the results, with its [importance].
+    unsortedResults.add(
+      Result(
+        element: _currentElement,
+        importance: importance,
+      ),
+    );
   }
 }
