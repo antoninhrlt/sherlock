@@ -118,17 +118,22 @@ See the [examples](#examples).
 - ### Queries
   Prototypes
   ```dart
-  // Both functions are equivalent.
   void query(String where, String regex, bool caseSensitive = false) 
-  void queryContain(String where, String regex, bool caseSensitive = false) 
   ```
   Usages
   ```dart
-  /// All elements where their title contains the word 'game' or 'vr'.
+  /// All elements having a title, which contains the word 'game' or 'vr'.
   sherlock.query(where: 'title', regex: r'(game|vr)');
 
-  /// All elements with 'cat' in at least one of their fields.
+  /// All elements with in at least one of their fields which contain the word 
+  /// 'cat'.
   sherlock.query(where: '*', regex: r'cat');
+
+  /// All elements having a title, which is equal to 'movie theatre'.
+  sherlock.query(where: 'title', regex: r'^Movie Theatre$');
+  /// All elements having a title, which is equal to 'Movie Theatre', the case 
+  /// matter.
+  sherlock.query(where: 'title', regex: r'^Movie Theatre$', caseSensitive: true);
 
   /// All elements with both words 'world' and 'pretty' in their descriptions.
   sherlock.query(where: 'description', regex: r'(?=.*pretty)(?=.*world).*');
@@ -163,8 +168,12 @@ See the [examples](#examples).
   );
   ```
   ```dart
-  /// All activities having a title corresponding to 'Parc'.
+  /// All activities having a title corresponding to 'Parc', the case matters.
   sherlock.queryMatch(where: 'title', match: 'Parc');
+  ```
+  ```dart
+  /// All activities having a title corresponding to 'parc', no matter the case.
+  sherlock.queryMatch(where: 'title', match: 'pArC', caseSensitive: false);
   ```
 
 - Smart search
