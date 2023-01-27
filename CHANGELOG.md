@@ -12,3 +12,5 @@
   Fix wrong condition in type check.
 - # 0.0.7
   Fix bug with UnsupportedError. Make parameter 'where' optional.
+- # 0.0.8
+  Remove `queryContain` and make `query` more relevant in how it searches. Update results management.
