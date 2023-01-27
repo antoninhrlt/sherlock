@@ -84,17 +84,27 @@ See the [examples](#examples).
   final sherlock = Sherlock(elements: users, priorities: priorities);
   ```
 - ### Results
-  Performed queries add the matching elements to the private field `_unsortedResults`.
-  After that, the results can be retrieved sorted or unsorted
+  Performed queries add the matching elements to the field `unsortedResults`, 
+  which can be used to get the results as `Result` objects.
+
+  After that, the results can be retrieved sorted and unwrapped.
 
   Prototypes
   ```dart
   List<Map<String, dynamic>> get results; // sorted results
-  List<Map<String, dynamic>> get unsortedResults;
+  List<Result> unsortedResults;
 
   void forget(); // resets the results
   ```
+  ```dart
+  class Result {
+    Map<String, dynamic> element;
+    int importance;
+  }
+  ```
+
   Usages
+  
   Results sorted following the `priorities` map.
   ```dart
   final sherlock = Sherlock(/*...*/);
