@@ -117,6 +117,38 @@ class Sherlock {
     }
   }
 
+  /// Browses the [elements] to perform a search, calls [fn] giving the column
+  /// id where the search has to be performed in, and the priority of this
+  /// column.
+  ///
+  /// The definition of [fn] can be whatever, but it is designed to [_addResult]
+  /// with the matching values.
+  void _queryAny(
+    String where,
+    void Function(String columnId, int importance) fn,
+  ) {
+    for (Element element in elements) {
+      /// Sets the [_currentElement] in order to be used by the other functions.
+      _currentElement = element;
+
+      if (where == '*') {
+        /// Performs search in all the columns of the [_currentElement].
+        for (var key in _currentElement.keys) {
+          fn(
+            key,
+            priorities[key] ?? priorities['*']!,
+          );
+        }
+      } else {
+        /// Performs search in given column [where].
+        fn(
+          where,
+          priorities[where] ?? priorities['*']!,
+        );
+      }
+    }
+  }
+
   /// Searches for values matching with the [regex], in [where].
   ///
   /// The parameter [where] is either '*' (global search) or a column key.
@@ -128,86 +160,65 @@ class Sherlock {
     /// Creates the [RegExp] from the given [String] regex.
     var what = RegExp(regex, caseSensitive: caseSensitive);
 
-    /// Whether the search is to be performed in all columns
-    var isGlobal = (where == '*');
+    /// Adds result when [what] is matching with the [regex].
+    ///
+    /// Recursive function when [stringOrList] is a [List].
+    void add(dynamic stringOrList, int importance) {
+      if (stringOrList == null) {
+        return;
+      }
 
-    /// The [element] is a [Map] following the same structure.
-    /// It means that [where] must be a column of [element].
-    for (Element element in elements) {
-      _currentElement = element;
-
-      /// Searches in all columns.
-      if (isGlobal) {
-        for (var key in element.keys) {
-          _addWhen(
-            dyn: element[key],
-            regex: what,
-            importance: priorities[key] ?? priorities['*']!,
-            fn: ((string, regex) => regex.hasMatch(string)),
-          );
+      if (stringOrList.runtimeType == String) {
+        /// The string contains a value matching with the [regex], adds the current
+        /// element to the results.
+        if (what.hasMatch(stringOrList)) {
+          _addResult(importance: importance);
         }
 
-        continue;
+        return;
       }
 
-      /// Searches in the specified column.
-      _addWhen(
-        dyn: element[where],
-        regex: what,
-        importance: priorities[where] ?? priorities['*']!,
-        fn: ((string, regex) => regex.hasMatch(string)),
-      );
-    }
-  }
+      /// Recursive call to check each string of the list.
+      if (stringOrList.runtimeType == List<String>) {
+        /// Calls this function recursively for all the strings of the list.
+        for (String string in stringOrList) {
+          add(string, importance);
+        }
 
-  /// Calls the [fn] function with [dyn] when it is a [String] and [regex]. If
-  /// the returned boolean value is `true`: the element is added to the results.
-  ///
-  /// The parameter [dyn] is either a [String] or a list of [String].
-  ///
-  /// When [dyn] is a [List] object, the function is called recursively for all
-  /// the strings in the list.
-  void _addWhen({
-    required dynamic dyn,
-    required RegExp regex,
-    required int importance,
-    required bool Function(String string, RegExp regex) fn,
-  }) {
-    if (dyn == null) {
-      return;
-    }
-
-    if (dyn.runtimeType == String) {
-      /// The string contains a value matching with the [regex], adds the current
-      /// element to the results.
-      if (fn(dyn, regex)) {
-        _addResult(importance: importance);
+        return;
       }
-    } else if (dyn.runtimeType == List<String>) {
-      /// Calls this function recursively for all the elements of the list.
-      for (String element in dyn) {
-        _addWhen(dyn: element, regex: regex, importance: importance, fn: fn);
+
+      /// Recursive call for list of list or list of list of list etc...
+      if (stringOrList.runtimeType == List<dynamic>) {
+        /// Calls this function recursively for all the objects of the list.
+        for (dynamic dyn in stringOrList) {
+          add(dyn, importance);
+        }
+
+        return;
       }
     }
+
+    /// Performs the query.
+    _queryAny(where, (columnId, importance) {
+      add(_currentElement[columnId], importance);
+    });
   }
 
   /// Searches for values when a key exists for [what] in [where].
   void queryExist({required String where, required String what}) {
-    /// Cannot be global.
-    if (where == '*') {
-      return;
-    }
-
-    for (Element element in elements) {
-      _currentElement = element;
-
+    _queryAny(where, (columnId, importance) {
       /// Searches in the specified column.
-      /// When it does not exist, does nothing.
-      var value = _currentElement[where];
-      if (value != null && value[what] != null) {
-        _addResult(importance: priorities[where] ?? priorities['*']!);
+      /// When [what] does not exist, does nothing.
+      var value = _currentElement[columnId];
+
+      /// Does not exist, or the value exists but it is null.
+      if (value == null || value[what] == null) {
+        return;
       }
-    }
+
+      _addResult(importance: priorities[columnId] ?? priorities['*']!);
+    });
   }
 
   /// Searches for a value corresponding to a boolean expression in [where].
@@ -215,40 +226,14 @@ class Sherlock {
     String where = "*",
     required bool Function(dynamic value) fn,
   }) {
-    /// Whether the search is to be performed in all columns
-    var isGlobal = (where == '*');
-
-    /// The [element] is a [Map] following the same structure.
-    /// It means that [where] must be a column of [element].
-    for (Element element in elements) {
-      _currentElement = element;
-
-      /// Checks the boolean expression in all columns.
-      if (isGlobal) {
-        for (var key in element.keys) {
-          /// The boolean expression is true.
-          if (fn(element[key])) {
-            _addResult(
-              importance: priorities[key] ?? priorities['*']!,
-            );
-          }
-        }
-
-        continue;
+    _queryAny(where, (columnId, importance) {
+      /// The return value of [fn] is true, it's a match !
+      if (fn(_currentElement[columnId])) {
+        _addResult(
+          importance: priorities[columnId] ?? priorities['*']!,
+        );
       }
-
-      /// Checks the boolean expression, in the specified column.
-      /// When the column does not exist, does nothing.
-      var value = element[where];
-      if (value == null) {
-        continue;
-      }
-
-      // The boolean expression is true.
-      if (fn(value)) {
-        _addResult(importance: priorities[where] ?? priorities['*']!);
-      }
-    }
+    });
   }
 
   /// Searches for a value which is equal to [match], in [where].
@@ -293,10 +278,8 @@ class Sherlock {
     queryBool(where: where, fn: (value) => value == match);
   }
 
-  /// Adds the [_currentElement] in the [results].
-  ///
-  /// There should be duplicated since [shouldContinue] is used in loops over
-  /// [elements].
+  /// Adds the [_currentElement] wrapped in a [Result] object, into the
+  /// [results].
   void _addResult({required int importance}) {
     /// Avoid duplicates
     for (Result e in unsortedResults) {
