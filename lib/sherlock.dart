@@ -21,14 +21,20 @@ class Sherlock {
   /// Default column priorities
   static final PriorityMap _defaults = {'*': 1};
 
-  /// The result elements are wrapped into [Result]s.
-  List<Result> unsortedResults;
-
   /// The current manipulated element. Used in loops by the query functions.
   Element _currentElement;
 
+  /// Unsorted research findings, wrapped into a list of [Result].
+  ///
+  /// Use [sortResults] to sort them still wrapped, or use the [results] getter
+  /// to sort them unwrapped.
+  List<Result> unsortedResults;
+
   /// Sorted research findings.
-  List<Element> get results => sortResults(unsortedResults: unsortedResults);
+  ///
+  /// Results are unwrapped to a list of [Element].
+  List<Element> get results =>
+      sortResults(unsortedResults: unsortedResults).unwrap();
 
   /// Creates a [Sherlock] instance that will search in [elements] with a given
   /// map of [priorities].
@@ -46,15 +52,10 @@ class Sherlock {
   }
 
   /// Sorts a list of [unsortedResults].
-  ///
-  /// Unwraps the results.
-  static List<Element> sortResults({required List<Result> unsortedResults}) {
+  static List<Result> sortResults({required List<Result> unsortedResults}) {
     /// Gets the results sorted by their importance.
-    var sortedResults = unsortedResults
+    return unsortedResults
       ..sort((a, b) => -a.importance.compareTo(b.importance));
-
-    /// Unwraps the [Result]s to [Element]s.
-    return sortedResults.map((e) => e.element).toList();
   }
 
   /// Smart search in [where], from a natural user [input].
@@ -65,14 +66,8 @@ class Sherlock {
   ///
   /// The [where] parameter is either equal to `'*'` for global search (in all
   /// columns) or a list of columns.
-  void search({dynamic where = "*", required String input}) {
-    /// The type of [where] can be either a list of keywords or '*'.
-    if ((where.runtimeType != List<String>) && (where.runtimeType != String)) {
-      throw TypeError();
-    } else if (where.runtimeType == String && where != '*') {
-      /// [String] type is only accepted when [where] equals '*'.
-      throw Error();
-    }
+  void search({dynamic where = '*', required String input}) {
+    Where(where: where).checkValidity();
 
     final inputKeywords = input.split(' ');
 
@@ -83,7 +78,7 @@ class Sherlock {
     final regexAny = RegexHelper.any(keywords: inputKeywords);
 
     /// Searches globally.
-    if (where == '*') {
+    if (Where(where: where).isGlobal) {
       queryBool(
         where: where,
         fn: (value) => (value.runtimeType == String)
@@ -96,10 +91,13 @@ class Sherlock {
       return;
     }
 
-    /// Separate the loops
+    /// Searches in the specified columns.
+
+    /// Specified columns where to search.
+    var columns = Where(where: where).columns;
 
     /// Searches perfect matches.
-    for (var column in where) {
+    for (var column in columns) {
       /// The case does not matter.
       queryBool(
         where: column,
@@ -110,12 +108,12 @@ class Sherlock {
     }
 
     /// Searches in specified columns.
-    for (var column in where) {
+    for (var column in columns) {
       /// Searches for all the keywords at once.
       query(where: column, regex: regexAll);
     }
 
-    for (var column in where) {
+    for (var column in columns) {
       /// Searches any word from the keywords.
       query(where: column, regex: regexAny);
     }
@@ -135,7 +133,7 @@ class Sherlock {
       /// Sets the [_currentElement] in order to be used by the other functions.
       _currentElement = element;
 
-      if (where == '*') {
+      if (Where(where: where).isGlobal) {
         /// Performs search in all the columns of the [_currentElement].
         for (var key in _currentElement.keys) {
           fn(
@@ -144,7 +142,7 @@ class Sherlock {
           );
         }
       } else {
-        /// Performs search in given column [where].
+        /// Performs a search in the specified column.
         fn(
           where,
           priorities[where] ?? priorities['*']!,
@@ -157,7 +155,7 @@ class Sherlock {
   ///
   /// The parameter [where] is either '*' (global search) or a column key.
   void query({
-    String where = "*",
+    String where = '*',
     required String regex,
     bool caseSensitive = false,
   }) {
@@ -227,7 +225,7 @@ class Sherlock {
 
   /// Searches for a value corresponding to a boolean expression in [where].
   void queryBool({
-    String where = "*",
+    String where = '*',
     required bool Function(dynamic value) fn,
   }) {
     _queryAny(where, (columnId, importance) {
@@ -245,7 +243,7 @@ class Sherlock {
   /// The optional parameter [caseSensitive] can be used only when [match] is a
   /// [String] and the matching value is also a string.
   void queryMatch({
-    String where = "*",
+    String where = '*',
     required dynamic match,
     bool? caseSensitive,
   }) {
