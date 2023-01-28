@@ -14,3 +14,5 @@
   Fix bug with UnsupportedError. Make parameter 'where' optional.
 - # 0.0.8
   Remove `queryContain` and make `query` more relevant in how it searches. Update results management.
+- # 0.0.9
+  Add `sortResults`. Type or value error for `where` is now explicit. Move examples to example/
