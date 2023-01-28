@@ -170,4 +170,18 @@ void main() {
 
     sherlock.forget();
   });
+
+  test('where', () {
+    sherlock.query(regex: r'');
+    try {
+      sherlock.search(where: 5, input: '');
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+    try {
+      sherlock.search(where: 'foo', input: '');
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  });
 }
