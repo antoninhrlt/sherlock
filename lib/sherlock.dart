@@ -28,15 +28,7 @@ class Sherlock {
   Element _currentElement;
 
   /// Sorted research findings.
-  List<Element> get results {
-    /// Gets the results sorted by points.
-    var sortedResults = unsortedResults
-      ..sort((a, b) => -a.importance.compareTo(b.importance));
-
-    /// Returns a list of [Element], not results.
-    /// Results with greatest points are above.
-    return sortedResults.map((e) => e.element).toList();
-  }
+  List<Element> get results => sortResults(unsortedResults: unsortedResults);
 
   /// Creates a [Sherlock] instance that will search in [elements] with a given
   /// map of [priorities].
@@ -51,6 +43,18 @@ class Sherlock {
   /// Resets the [results].
   void forget() {
     unsortedResults = [];
+  }
+
+  /// Sorts a list of [unsortedResults].
+  ///
+  /// Unwraps the results.
+  static List<Element> sortResults({required List<Result> unsortedResults}) {
+    /// Gets the results sorted by their importance.
+    var sortedResults = unsortedResults
+      ..sort((a, b) => -a.importance.compareTo(b.importance));
+
+    /// Unwraps the [Result]s to [Element]s.
+    return sortedResults.map((e) => e.element).toList();
   }
 
   /// Smart search in [where], from a natural user [input].
