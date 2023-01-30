@@ -18,6 +18,11 @@ void main() {
 
     sherlock.forget();
 
+    sherlock.search(where: ['title'], input: 'live online');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
     sherlock.search(where: '*', input: 'extreme Vr');
     debugPrint(sherlock.results.toString());
 
