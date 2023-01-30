@@ -3,6 +3,7 @@ library sherlock;
 import 'package:sherlock/result.dart';
 import 'package:sherlock/types.dart';
 import 'package:sherlock/regex.dart';
+import 'package:sherlock/string.dart';
 
 /// Returns `true`. Can be used to test if "sherlock" is correctly installed.
 bool helloSherlock() {
@@ -85,8 +86,8 @@ class Sherlock {
             : false,
       );
 
-      query(where: where, regex: regexAll);
-      query(where: where, regex: regexAny);
+      query(where: where, regex: regexAll, normaliseStrings: true);
+      query(where: where, regex: regexAny, normaliseStrings: true);
       return;
     }
 
@@ -109,12 +110,12 @@ class Sherlock {
     /// Searches in specified columns.
     for (var column in columns) {
       /// Searches for all the keywords at once.
-      query(where: column, regex: regexAll);
+      query(where: column, regex: regexAll, normaliseStrings: true);
     }
 
     for (var column in columns) {
       /// Searches any word from the keywords.
-      query(where: column, regex: regexAny);
+      query(where: column, regex: regexAny, normaliseStrings: true);
     }
   }
 
@@ -157,6 +158,7 @@ class Sherlock {
     String where = '*',
     required String regex,
     bool caseSensitive = false,
+    bool normaliseStrings = false,
   }) {
     /// Creates the [RegExp] from the given [String] regex.
     var what = RegExp(regex, caseSensitive: caseSensitive);
@@ -164,12 +166,16 @@ class Sherlock {
     /// Adds result when [what] is matching with the [regex].
     ///
     /// Recursive function when [stringOrList] is a [List].
-    void add(dynamic stringOrList, int priority) {
+    void addWhenMatch(dynamic stringOrList, int priority) {
       if (stringOrList == null) {
         return;
       }
 
       if (stringOrList.runtimeType == String) {
+        if (normaliseStrings) {
+          stringOrList = stringOrList.toString().normalized;
+        }
+
         /// The string contains a value matching with the [regex], adds the current
         /// element to the results.
         if (what.hasMatch(stringOrList)) {
@@ -183,7 +189,7 @@ class Sherlock {
       if (stringOrList.runtimeType == List<String>) {
         /// Calls this function recursively for all the strings of the list.
         for (String string in stringOrList) {
-          add(string, priority);
+          addWhenMatch(string, priority);
         }
 
         return;
@@ -193,7 +199,7 @@ class Sherlock {
       if (stringOrList.runtimeType == List<dynamic>) {
         /// Calls this function recursively for all the objects of the list.
         for (dynamic dyn in stringOrList) {
-          add(dyn, priority);
+          addWhenMatch(dyn, priority);
         }
 
         return;
@@ -202,7 +208,7 @@ class Sherlock {
 
     /// Performs the query.
     _queryAny(where, (columnId, priority) {
-      add(_currentElement[columnId], priority);
+      addWhenMatch(_currentElement[columnId], priority);
     });
   }
 
