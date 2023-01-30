@@ -1,9 +1,9 @@
 # sherlock
-Search a list of maps and order the results based on a given priority map, and by match level. Smart search for user search
+Collection of search and smart search functions, for local data and given priorities
 
 ## Usage
-Sherlock needs the elements in which it (he?) will search.
-A map for priorities can be specified for results sorting, but it is not mandatory.
+Sherlock needs the elements in which it (he?) will search. Priorities can be specified for results sorting, but it is not mandatory.
+
 ```dart
 final foo = [
   {
@@ -14,11 +14,11 @@ final foo = [
   // Other elements...
 ];
 
-/// The bigger it is, the more important it is. 
+// The bigger it is, the more important it is. 
 final priorities = {
   'col2': 4,
   'col1': 3,
-  '*': 1, // all the others
+  // '*': 1,
 };
 
 final sherlock = Sherlock(elements: foo, priorities: priorities);
@@ -30,6 +30,8 @@ sherlock.forget(); // clear the results
 // Other queries...
 ```
 
+> Note : this package is designed for searches in local data retrieved after an API call or something. It avoids requiring Internet during the search.
+
 See the [examples](#examples).
 
 ## Overview
@@ -38,7 +40,7 @@ See the [examples](#examples).
   ```dart
   Sherlock(
     List<Map<String, dynamic>> elements, 
-    Map<String, int> priorities = const {'*': 1},
+    Map<String, int> priorities = {'*': 1},
   )
   ```
   Usages
@@ -69,23 +71,35 @@ See the [examples](#examples).
 
   final sherlock = Sherlock(elements: users)
   ```
-  Specifying a `priorities` map :
+  Specifying `priorities` :
   ```dart
-  // First and last name have the same importance.
+  // First and last name have the same priority.
   // The city is less important.
-  // Default importance is `1`. 
+  // The default priority is `1`. 
   Map<String, int> priorities = [
     'firstName': 3,
     'lastName': 3,
     'city': 2,
-    '*': 1,
   ];
 
   final sherlock = Sherlock(elements: users, priorities: priorities);
   ```
+- ### Priorities
+  The priority map (also known as "priorities") is used to define the priority of each column. If there is no priority set for a column, the default priority will be used instead.
+
+  The default priority value can be specified, otherwise it will be set to `1` :
+  ```dart
+  // The city is the least important.
+  Map<String, int> priorities = [
+    'firstName': 3,
+    'lastName': 3,
+    'city': 1,
+    '*': 2,
+  ];
+  ``` 
+
 - ### Results
-  Performed queries add the matching elements to the field `unsortedResults`, 
-  which can be used to get the results as `Result` objects.
+  Performed queries add the matching elements to the field `unsortedResults`, which can be used to get the results as `Result` objects.
 
   After that, the results can be retrieved sorted and unwrapped.
 
@@ -97,9 +111,17 @@ See the [examples](#examples).
   void forget(); // resets the results
   ```
   ```dart
+  /// Out of the [Sherlock] class.
+  
   class Result {
     Map<String, dynamic> element;
-    int importance;
+    int priority;
+  }
+
+  List<Result> sortResults(List<Result> unsortedResults);
+
+  extension UnwrapResults on List<Result> {
+    List<Map<String, dynamic>> unwrap();
   }
   ```
 
@@ -111,18 +133,27 @@ See the [examples](#examples).
   // Queries...
   final results = sherlock.results;
   ```
-  Getting results unsorted mean the `priorities` are completely ignored.
+  Getting results unsorted means the results will be in the order they were found. Each `Result` contain the actual result (an element matching with the query) and its priority.
   ```dart
   final sherlock = Sherlock(/*...*/);
   // Queries...
   final results = sherlock.unsortedResults;
+  ```
+  Also, the results can be sorted later :
+  ```dart
+  final unsortedResults = sherlock.unsortedResults;
+  final results = sortResults(unsortedResults);
+  ```
+  But also unwrapped, in order to get elements instead of `Result` objects.
+    ```dart
+  final results = sortResults(unsortedResults).unwrap();
   ```
   Reset the values to perform new unrelated queries.
   ```dart
   final sherlock = Sherlock(/*...*/);
   // Queries...
   final results = sherlock.results; // save the results.
-  sherlock.forget(); // `sherlock.results` == `{}`.
+  sherlock.forget(); // `sherlock.results == []`.
   // Queries...
   ```
 - ### Queries
