@@ -65,10 +65,16 @@ class Sherlock {
     final inputKeywords = input.split(' ');
 
     /// Searches for all the keywords at once.
-    final regexAll = RegexHelper.all(keywords: inputKeywords);
+    final regexAll = RegexHelper.all(
+      keywords: inputKeywords,
+      searchWords: true,
+    );
 
     /// Searches any word from the keywords.
-    final regexAny = RegexHelper.any(keywords: inputKeywords);
+    final regexAny = RegexHelper.any(
+      keywords: inputKeywords,
+      searchWords: true,
+    );
 
     /// Searches globally.
     if (Where(where: where).isGlobal) {
