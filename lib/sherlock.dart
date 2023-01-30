@@ -51,13 +51,6 @@ class Sherlock {
     unsortedResults = [];
   }
 
-  /// Sorts a list of [unsortedResults].
-  static List<Result> sortResults({required List<Result> unsortedResults}) {
-    /// Gets the results sorted by their importance.
-    return unsortedResults
-      ..sort((a, b) => -a.importance.compareTo(b.importance));
-  }
-
   /// Smart search in [where], from a natural user [input].
   ///
   /// At first, adds perfect matches, to make them on top of the results list.
@@ -123,11 +116,11 @@ class Sherlock {
   /// id where the search has to be performed in, and the priority of this
   /// column.
   ///
-  /// The definition of [fn] can be whatever, but it is designed to [_addResult]
+  /// The callback [fn] can do anything, but it is designed to [_addResult]
   /// with the matching values.
   void _queryAny(
     String where,
-    void Function(String columnId, int importance) fn,
+    void Function(String columnId, int priority) fn,
   ) {
     for (Element element in elements) {
       /// Sets the [_currentElement] in order to be used by the other functions.
@@ -165,7 +158,7 @@ class Sherlock {
     /// Adds result when [what] is matching with the [regex].
     ///
     /// Recursive function when [stringOrList] is a [List].
-    void add(dynamic stringOrList, int importance) {
+    void add(dynamic stringOrList, int priority) {
       if (stringOrList == null) {
         return;
       }
@@ -174,7 +167,7 @@ class Sherlock {
         /// The string contains a value matching with the [regex], adds the current
         /// element to the results.
         if (what.hasMatch(stringOrList)) {
-          _addResult(importance: importance);
+          _addResult(priority: priority);
         }
 
         return;
@@ -184,7 +177,7 @@ class Sherlock {
       if (stringOrList.runtimeType == List<String>) {
         /// Calls this function recursively for all the strings of the list.
         for (String string in stringOrList) {
-          add(string, importance);
+          add(string, priority);
         }
 
         return;
@@ -194,7 +187,7 @@ class Sherlock {
       if (stringOrList.runtimeType == List<dynamic>) {
         /// Calls this function recursively for all the objects of the list.
         for (dynamic dyn in stringOrList) {
-          add(dyn, importance);
+          add(dyn, priority);
         }
 
         return;
@@ -202,14 +195,14 @@ class Sherlock {
     }
 
     /// Performs the query.
-    _queryAny(where, (columnId, importance) {
-      add(_currentElement[columnId], importance);
+    _queryAny(where, (columnId, priority) {
+      add(_currentElement[columnId], priority);
     });
   }
 
   /// Searches for values when a key exists for [what] in [where].
   void queryExist({required String where, required String what}) {
-    _queryAny(where, (columnId, importance) {
+    _queryAny(where, (columnId, priority) {
       /// Searches in the specified column.
       /// When [what] does not exist, does nothing.
       var value = _currentElement[columnId];
@@ -219,7 +212,7 @@ class Sherlock {
         return;
       }
 
-      _addResult(importance: priorities[columnId] ?? priorities['*']!);
+      _addResult(priority: priorities[columnId] ?? priorities['*']!);
     });
   }
 
@@ -228,11 +221,11 @@ class Sherlock {
     String where = '*',
     required bool Function(dynamic value) fn,
   }) {
-    _queryAny(where, (columnId, importance) {
+    _queryAny(where, (columnId, priority) {
       /// The return value of [fn] is true, it's a match !
       if (fn(_currentElement[columnId])) {
         _addResult(
-          importance: priorities[columnId] ?? priorities['*']!,
+          priority: priorities[columnId] ?? priorities['*']!,
         );
       }
     });
@@ -280,9 +273,9 @@ class Sherlock {
     queryBool(where: where, fn: (value) => value == match);
   }
 
-  /// Adds the [_currentElement] wrapped in a [Result] object, into the
+  /// Adds the [_currentElement] wrapped into a [Result] object, into the
   /// [results].
-  void _addResult({required int importance}) {
+  void _addResult({required int priority}) {
     /// Avoid duplicates
     for (Result e in unsortedResults) {
       if (e.element == _currentElement) {
@@ -290,11 +283,11 @@ class Sherlock {
       }
     }
 
-    /// Adds the [_currentElement] to the results, with its [importance].
+    // Adds the [_currentElement] to the results, with its [priority].
     unsortedResults.add(
       Result(
         element: _currentElement,
-        importance: importance,
+        priority: priority,
       ),
     );
   }

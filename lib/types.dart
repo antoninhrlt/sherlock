@@ -1,4 +1,4 @@
-/// Used to define the importance of each column.
+/// Used to define the priority of each column.
 ///
 /// The bigger [int] it is, the more important it is.
 typedef PriorityMap = Map<String, int>;
