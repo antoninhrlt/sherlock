@@ -32,9 +32,11 @@ sherlock.forget(); // clear the results
 
 > Note : this package is designed for searches in local data retrieved after an API call or something. It avoids requiring Internet during the search.
 
-See the [examples](#examples).
+See the [examples](example/README.md).
 
 ## Overview
+See also the [search completion tool](#search-completion-tool).
+
 - ### Create a `Sherlock` instance.
   Prototype
   ```dart
@@ -159,7 +161,7 @@ See the [examples](#examples).
 - ### Queries
   Prototypes
   ```dart
-  void query(String where, String regex, bool caseSensitive = false) 
+  void query(String where = '*', String regex, bool caseSensitive = false) 
   ```
   Usages
   ```dart
@@ -168,7 +170,7 @@ See the [examples](#examples).
 
   /// All elements with in at least one of their fields which contain the word 
   /// 'cat'.
-  sherlock.query(where: '*', regex: r'cat');
+  sherlock.query(regex: r'cat');
 
   /// All elements having a title, which is equal to 'movie theatre'.
   sherlock.query(where: 'title', regex: r'^Movie Theatre$');
@@ -191,9 +193,9 @@ See the [examples](#examples).
   ```
   Prototypes
   ```dart
-  void queryBool(String where, bool Function(dynamic value) fn)
+  void queryBool(String where = '*', bool Function(dynamic value) fn)
 
-  void queryMatch(String where, dynamic match) {
+  void queryMatch(String where = '*', dynamic match) {
     queryBool(where: where, fn: (value) => value == match);
   }
   ```
@@ -229,96 +231,158 @@ See the [examples](#examples).
   Perfect matches are searched first, it means they will be on top of the `results` if they exist.
   ```dart
   /// All elements having at least one of their field containing the word 'cats'
-  sherlock.search(where: '*', input: 'cAtS');
+  sherlock.search(input: 'cAtS');
   /// Elements having their title or their categories containing the word 'cat'
   sherlock.search(where: ['title', 'categories'], input: 'cat');
   ```
 
-## Examples
+## Search completion tool
+When doing searches from an user's input, it might be useful to help them completing their search. That's why `SherlockCompletion` exists.
 
-- ## Find users with a specific name
-    ```dart
-    final users = [
-      {
-          'firstName': 'Finn',
-          'lastName': 'Thornton',
-          'city': 'Edinburgh',
-          'id': 1,
-      },
-      {
-          'firstName': 'Suz',
-          'lastName': 'Judy',
-          'city': 'Paris',
-          'id': 2,
-      },
-      {
-          'firstName': 'Suz',
-          'lastName': 'Crystal',
-          'city': 'Edinburgh',
-          'id': 3,
-      },
-    ];
-    ```
-    ```dart
-    final sherlock = Sherlock(elements: users);
-    sherlock.queryMatch(where: 'firstName', match: 'Suz');
+The results could be used in a search widget for example.
 
-    print(sherlock.results);
-    ```
-    ```
-    [
-      {
-        firstName: Suz, 
-        lastName: Judy, 
-        city: Paris, 
-        id: 2
-      }, 
-      {
-        firstName: Suz, 
-        lastName: Crystal, 
-        city: Edinburgh, 
-        id: 3
-      }
-    ]
-    ```
-- ## Find activities related to sport
-    ```dart
-    final activities = [
-      {
-        'title': 'Sport with Jimmy',
-      },
-      {
-        'title': 'Gym in London',
-        'description': 'Come and do sport !',
-      },
-      {
-        'title': 'Skydiving',
-        'categories': ['sport', 'extreme'],
-      },
-      {
-        'title': 'Coding camp',
-      },
-    ];
-    ```
-    ```dart
-    final sherlock = Sherlock(elements: activities);
-    sherlock.query(where: '*', regex: r'sport');
-    print(sherlock.results);
-    ```
-    ```
-    [
-      {
-        title: Sport with Jimmy
-      }, 
-      {
-        title: Gym in London, 
-        description: Come and do sport !
-      }, 
-      {
-        title: Skydiving, 
-        categories: [sport, extreme]
-      }
-    ]
-    ```
+## Overview
+- ### Create a `SherlockCompletion` instance
+  Prototype
+  ```dart
+  SherlockCompletion(
+    String where, 
+    List<Map<String, dynamic>> elements,
+  )
+  ```
+  Usage
+  ```dart
+  final places = [
+    {
+      'name': 'Africa discovery',
+    },
+    {
+      'name': 'Fruits and vegetables market',
+      'description': 'A cool place to buy fruits and vegetables',
+    },
+    {
+      'name': 'Fresh fish store',
+    },
+    {
+      'name': 'Ball pool',
+    },
+    {
+      'name': 'Finland discovery',
+    },
+  ];
 
-    Find more examples in the [tests](test/) !
+  final completion = SherlockCompletion(where: 'name', elements: places);
+  ```
+- ### Input
+  Prototype
+  ```dart
+  List<String> input(
+    String input,
+    bool caseSensitive = false,
+    bool? caseSensitiveFurtherSearches,
+    int minResults = -1,
+    int maxResults = -1,
+  )
+  ```
+  Usage
+  ```dart
+  // Find all the names starting with 'fr'.
+  final a = completion.input(input: 'fr');
+  print(a);
+
+  // Find all the names starting with 'Fr', and the case matters.
+  final b = completion.input(input: 'Fr', caseSensitive: true);  
+  print(b);
+  ```
+  ```
+  [Fruits and vegetables market, Fresh fish store]
+  [Fruits and vegetables market, Fresh fish store]
+  ```
+  ```dart
+  // Try to find at least 3 names matching with 'fr'.
+  final c = completion.input(input: 'fr', minResults: 3);
+  print(c);
+
+  // Try to find at least 3 names matching with 'Fr', and the case matters only for the searches that might be performed if there is less than 3 results.
+  final d = completion.input(input: 'Fr', minResults: 3, caseSensitiveFurtherSearches: true);
+  print(d)
+  ```
+  ```
+  [Fruits and vegetables market, Fresh fish store, Africa discovery]
+  [Fruits and vegetables market, Fresh fish store]
+  ```
+  ```dart
+  // Find maximum 1 name matching with 'fr'.
+  final e = completion.input(input: 'fr', maxResults: 1);
+  print(e);
+  ```
+  ```
+  [Fruits and vegetables market]
+  ```
+- ### Results
+  Prototypes
+  ```dart
+  /// [Sherlock] results.
+  List<Map<String, dynamic>> results;
+
+  /// [input] results.
+  List<String> input(...);
+  ```
+  Usage
+  ```dart
+  List<String> resultNames = completion.input(input: 'fr');
+  print('names: $resultNames')
+
+  List<Map<String, dynamic>> resultElements = completion.results;
+  print('elements: $resultElements'); 
+  ```
+  ```
+  names: [Fruits and vegetables market, Fresh fish store]
+  elements: [
+    {
+      name: Fruits and vegetables market, 
+      description: A cool place to buy fruits and vegetables
+    }, 
+    {
+      name: Fresh fish store
+    }
+  ] 
+  ```
+
+- ### Unchanged ranges of the results
+  Prototype
+  ```dart
+  List<Range> unchangedRanges({
+    String input,
+    List<String> results,
+  )
+  ```
+  ```dart
+  class Range {
+    int start;
+    int end;
+  }
+  ```
+  Usage
+
+  This can be used to highlight the unchanged part while displaying the possible completions.
+  
+  What it could look like :
+  <p align="center">
+    <img src="example/widget_completion.png" height="176"/>
+  </p>
+
+  ```dart
+  const input = 'Fr';
+  final results = completion.input(input: input, minResults: 3);
+
+  // The case is ignored.
+  List<Range> unchangedRanges = completion.unchangedRanges(input: input, results: results);
+
+  print(results);
+  print(unchangedRanges);
+  ```
+  ```
+  [Fruits and vegetables market, Fresh fish store, Africa discovery]
+  [[0, 2], [0, 2], [1, 3]]
+  ```
