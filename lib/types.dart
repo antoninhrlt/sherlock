@@ -43,3 +43,20 @@ class StringOrList<T> {
     }
   }
 }
+
+/// The simplest [Range] structure possible having a good debug print.
+class Range {
+  int start;
+  int end;
+
+  Range({required this.start, required this.end});
+
+  List<int> toList() {
+    return [start, end];
+  }
+
+  @override
+  String toString() {
+    return toList().toString();
+  }
+}
