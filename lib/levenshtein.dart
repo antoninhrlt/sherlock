@@ -23,14 +23,22 @@ int levenshtein({required String a, required String b}) {
 
   // For all `i` and `j`: `distances[i][j]` will hold the distance between the
   // first `i` characters of `a` and the first `j` characters of `b`.
-  var distances = List.generate(a.length + 1, (i) {
-    var row = List.generate(b.length + 1, (j) => j);
-    row[0] = i;
-    return row;
-  });
+  var distances = List.generate(
+    a.length + 1,
+    (i) => List.generate(
+      b.length + 1,
+      (j) {
+        if (j == 0) {
+          return i;
+        } else {
+          return j;
+        }
+      },
+    ),
+  );
 
-  for (int j = 1; j < b.length; j += 1) {
-    for (int i = 1; i < a.length; i += 1) {
+  for (int j = 1; j < b.length + 1; j += 1) {
+    for (int i = 1; i < a.length + 1; i += 1) {
       // Substitution cost.
       int cost = 1;
 
