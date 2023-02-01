@@ -87,11 +87,12 @@ class Sherlock {
     // Everything is normalized.
     normalizeSettings = NormalizeSettings(
       normalizeCase: true,
-      normalizeCaseType: true,
+      normalizeCaseType: false,
       removeDiacritics: true,
     );
 
     // Splits the input into keywords.
+    input = input.normalize(normalizeSettings);
     final inputKeywords = input.split(' ');
 
     // Creates an easily-manipulable 'where'.
@@ -111,11 +112,9 @@ class Sherlock {
 
     // Being equal.
     smartQuery(
-      query: (where) => queryBool(
+      query: (where) => queryMatch(
         where: where,
-        fn: (value) => (value.runtimeType == String)
-            ? value.toLowerCase() == input.toLowerCase()
-            : false,
+        match: input,
       ),
     );
 
@@ -124,7 +123,7 @@ class Sherlock {
       query: (where) => queryBool(
         where: where,
         fn: (value) => (value.runtimeType == String)
-            ? value.toLowerCase().startsWith(input.toLowerCase())
+            ? value.toLowerCase().startsWith(input)
             : false,
       ),
     );
@@ -159,6 +158,8 @@ class Sherlock {
   ///
   /// If [where] is not specified, it is a global search ('*'), otherwise it is
   /// the key of the column where to search.
+  ///
+  /// Applies the [normalizeSettings].
   void query({
     String where = '*',
     required String regex,
@@ -177,7 +178,6 @@ class Sherlock {
       if (stringOrList.runtimeType == String) {
         // Normalize the string following the [normalizeSettings].
         stringOrList = stringOrList.toString().normalize(normalizeSettings);
-
         // The string contains a value matching with the [regex], adds the current
         // element to the results.
         if (what.hasMatch(stringOrList)) {
@@ -250,40 +250,27 @@ class Sherlock {
 
   /// Searches for a value which is equal to [match], in [where].
   ///
-  /// The optional parameter [caseSensitive] can be used only when [match] is a
-  /// [String] and the matching value is also a string.
-  ///
   /// If [where] is not specified, it is a global search ('*'), otherwise it is
   /// the key of the column where to search.
+  ///
+  /// Applies the [normalizeSettings].
   void queryMatch({
     String where = '*',
     required dynamic match,
-    bool? caseSensitive,
   }) {
-    bool stringComparison = false;
+    bool stringComparison = match.runtimeType == String;
 
-    /// Parameter [caseSensitive] is set. The comparison must be between two
-    /// strings.
-    if (caseSensitive != null) {
-      if (match.runtimeType != String) {
-        throw TypeError();
-      }
-
-      stringComparison = true;
-    }
-
-    if (stringComparison && caseSensitive!) {
-      /// It is case sensitive, both [value] and [match] must be lowercased in
-      /// order to compare no matter the case.
+    if (stringComparison) {
       queryBool(
         where: where,
         fn: (value) {
           /// Cannot lowercase a non-string value.
           if (value.runtimeType != String) {
-            throw TypeError();
+            return false;
           }
 
-          return value.toLowerCase() == match.toLowerCase();
+          return value.toString().normalize(normalizeSettings) ==
+              match.toString().normalize(normalizeSettings);
         },
       );
       return;

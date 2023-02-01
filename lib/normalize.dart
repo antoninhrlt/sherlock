@@ -43,12 +43,27 @@ class NormalizeSettings {
           'diacritics': true,
         };
 
+  /// The defaults normalizing settings for a perfect match between strings.
+  /// ```dart
+  /// NormalizeSettings(
+  ///     normalizeCase: false,
+  ///     normalizeCaseType: false,
+  ///     removeDiacritics: false,
+  /// );
+  /// ```
+  NormalizeSettings.matching()
+      : settings = {
+          'case': false,
+          'caseType': false,
+          'diacritics': false,
+        };
+
   /// Changes the case sensitivity.
   ///
   /// If [caseSensitive] is `true`, the case setting will be set on `false`.
   /// If [caseSensitive] is `false`, the case setting will be set on `true`.
-  void changeCaseSensitivity(bool caseSensitive) {
-    settings['case'] = !caseSensitive;
+  set caseSensitivity(bool caseSensitivity) {
+    settings['case'] = !caseSensitivity;
   }
 
   bool get caseSensitivity => !this['case'];
