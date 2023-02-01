@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sherlock/normalize.dart';
 import 'package:sherlock/sherlock.dart';
 
 final activities = [
@@ -150,18 +151,27 @@ void main() {
   });
 
   test('queryMatch', () {
+    final sherlock = Sherlock(
+      elements: activities,
+      normalizeSettings: NormalizeSettings.matching(),
+    );
+
     /// All activities having a title corresponding to 'Parc'.
     sherlock.queryMatch(where: 'title', match: 'Parc');
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
 
+    sherlock.normalizeSettings.caseSensitivity = false;
+
     /// All activities having a title corresponding to 'parc', no matter
     /// the case.
-    sherlock.queryMatch(where: 'title', match: 'pArC', caseSensitive: true);
+    sherlock.queryMatch(where: 'title', match: 'pArC');
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
+
+    sherlock.normalizeSettings.caseSensitivity = true;
 
     /// All activities having at least one column's value corresponding to
     /// 'VR immersion'.

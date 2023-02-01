@@ -98,7 +98,7 @@ void main() {
     debugPrint(sherlock.results.toString());
     sherlock.forget();
 
-    sherlock.normalizeSettings.changeCaseSensitivity(true);
+    sherlock.normalizeSettings.caseSensitivity = true;
     sherlock.query(where: 'name', regex: r'^something NOT UPPER case$');
     debugPrint(sherlock.results.toString());
 
