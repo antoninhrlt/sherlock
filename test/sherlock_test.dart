@@ -153,7 +153,7 @@ void main() {
   test('queryMatch', () {
     final sherlock = Sherlock(
       elements: activities,
-      normalizeSettings: NormalizeSettings.matching(),
+      normalization: NormalizationSettings.matching(),
     );
 
     /// All activities having a title corresponding to 'Parc'.
@@ -162,7 +162,7 @@ void main() {
 
     sherlock.forget();
 
-    sherlock.normalizeSettings.caseSensitivity = false;
+    sherlock.normalization.caseSensitivity = false;
 
     /// All activities having a title corresponding to 'parc', no matter
     /// the case.
@@ -171,7 +171,7 @@ void main() {
 
     sherlock.forget();
 
-    sherlock.normalizeSettings.caseSensitivity = true;
+    sherlock.normalization.caseSensitivity = true;
 
     /// All activities having at least one column's value corresponding to
     /// 'VR immersion'.

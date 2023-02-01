@@ -1,7 +1,7 @@
 import 'package:diacritic/diacritic.dart' as diacritic;
 
 /// Settings about string normalization.
-class NormalizeSettings {
+class NormalizationSettings {
   /// The actual settings being a map with the settings id and their boolean
   /// value to known if this type of normalization has to be done or not.
   final Map<String, bool> settings;
@@ -18,7 +18,7 @@ class NormalizeSettings {
   ///
   /// Setting [removeDiacritics] is used to remove the diacritics (accents and
   /// other additional symbol on the characters).
-  NormalizeSettings({
+  NormalizationSettings({
     required bool normalizeCase,
     required bool normalizeCaseType,
     required bool removeDiacritics,
@@ -36,7 +36,7 @@ class NormalizeSettings {
   ///     removeDiacritics: true,
   /// );
   /// ```
-  const NormalizeSettings.defaults()
+  const NormalizationSettings.defaults()
       : settings = const {
           'case': true,
           'caseType': false,
@@ -51,7 +51,7 @@ class NormalizeSettings {
   ///     removeDiacritics: false,
   /// );
   /// ```
-  NormalizeSettings.matching()
+  NormalizationSettings.matching()
       : settings = {
           'case': false,
           'caseType': false,
@@ -89,7 +89,7 @@ class NormalizeSettings {
 /// Extends [String] with a normalizing function.
 extension Normalize on String {
   /// Normalizes a string following the given [settings].
-  String normalize(NormalizeSettings settings) {
+  String normalize(NormalizationSettings settings) {
     String normalized = this;
 
     // Normalizes the case type, but keep the case (upper or lower)

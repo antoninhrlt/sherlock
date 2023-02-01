@@ -20,7 +20,7 @@ class Sherlock {
   PriorityMap priorities;
 
   /// Settings for strings normalization.
-  NormalizeSettings normalizeSettings;
+  NormalizationSettings normalization;
 
   /// The current manipulated element. Used in loops by the query functions.
   Element _currentElement = {};
@@ -51,7 +51,7 @@ class Sherlock {
   Sherlock({
     required this.elements,
     PriorityMap priorities = const {'*': 1},
-    this.normalizeSettings = const NormalizeSettings.defaults(),
+    this.normalization = const NormalizationSettings.defaults(),
   }) : priorities = {
           ...{'*': 1},
           ...priorities
@@ -81,18 +81,18 @@ class Sherlock {
     Where(where: where).checkValidity();
 
     // Stores the [normalizeSettings] to restore them after the search.
-    final storedOldNormalizeSettings = normalizeSettings;
+    final storedOldNormalization = normalization;
 
     // Its own [NormalizeSettings].
     // Everything is normalized.
-    normalizeSettings = NormalizeSettings(
+    normalization = NormalizationSettings(
       normalizeCase: true,
       normalizeCaseType: false,
       removeDiacritics: true,
     );
 
     // Splits the input into keywords.
-    input = input.normalize(normalizeSettings);
+    input = input.normalize(normalization);
     final inputKeywords = input.split(' ');
 
     // Creates an easily-manipulable 'where'.
@@ -151,7 +151,7 @@ class Sherlock {
     );
 
     // Restores the [normalizeSettings].
-    normalizeSettings = storedOldNormalizeSettings;
+    normalization = storedOldNormalization;
   }
 
   /// Searches for values matching with the [regex], in [where].
@@ -165,7 +165,7 @@ class Sherlock {
     required String regex,
   }) {
     /// Creates the [RegExp] from the given [String] regex.
-    var what = RegExp(regex, caseSensitive: normalizeSettings.caseSensitivity);
+    var what = RegExp(regex, caseSensitive: normalization.caseSensitivity);
 
     /// Adds result when [what] is matching with the [regex].
     ///
@@ -177,7 +177,7 @@ class Sherlock {
 
       if (stringOrList.runtimeType == String) {
         // Normalize the string following the [normalizeSettings].
-        stringOrList = stringOrList.toString().normalize(normalizeSettings);
+        stringOrList = stringOrList.toString().normalize(normalization);
         // The string contains a value matching with the [regex], adds the current
         // element to the results.
         if (what.hasMatch(stringOrList)) {
@@ -269,8 +269,8 @@ class Sherlock {
             return false;
           }
 
-          return value.toString().normalize(normalizeSettings) ==
-              match.toString().normalize(normalizeSettings);
+          return value.toString().normalize(normalization) ==
+              match.toString().normalize(normalization);
         },
       );
       return;

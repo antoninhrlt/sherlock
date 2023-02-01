@@ -6,7 +6,7 @@ import 'package:sherlock/sherlock.dart';
 void main() {
   test('normalize', () {
     var string = 'wéirdö nàmè AA';
-    string = string.normalize(NormalizeSettings(
+    string = string.normalize(NormalizationSettings(
       normalizeCase: true,
       normalizeCaseType: false,
       removeDiacritics: true,
@@ -36,7 +36,7 @@ void main() {
   test('normalizeNothing', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalizeSettings: NormalizeSettings(
+      normalization: NormalizationSettings(
         normalizeCase: false,
         normalizeCaseType: false,
         removeDiacritics: false,
@@ -52,7 +52,7 @@ void main() {
   test('normalizeDiacritics', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalizeSettings: NormalizeSettings(
+      normalization: NormalizationSettings(
         normalizeCase: false,
         normalizeCaseType: false,
         removeDiacritics: true,
@@ -68,7 +68,7 @@ void main() {
   test('normalizeCaseType', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalizeSettings: NormalizeSettings(
+      normalization: NormalizationSettings(
         normalizeCase: false,
         normalizeCaseType: true,
         removeDiacritics: false,
@@ -87,7 +87,7 @@ void main() {
   test('normalizeCase', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalizeSettings: NormalizeSettings(
+      normalization: NormalizationSettings(
         normalizeCase: true,
         normalizeCaseType: false,
         removeDiacritics: false,
@@ -98,7 +98,7 @@ void main() {
     debugPrint(sherlock.results.toString());
     sherlock.forget();
 
-    sherlock.normalizeSettings.caseSensitivity = true;
+    sherlock.normalization.caseSensitivity = true;
     sherlock.query(where: 'name', regex: r'^something NOT UPPER case$');
     debugPrint(sherlock.results.toString());
 
@@ -108,7 +108,7 @@ void main() {
   test('normalizeAll', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalizeSettings: NormalizeSettings(
+      normalization: NormalizationSettings(
         normalizeCase: true,
         normalizeCaseType: true,
         removeDiacritics: true,
