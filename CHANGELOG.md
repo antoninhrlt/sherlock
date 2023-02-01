@@ -18,3 +18,5 @@
   Add `sortResults`. Type or value error for `where` is now explicit. Move examples to example/
 - # 0.0.10
   Clarify about the priorities. Update the results documentation. Move `sortResults` to "result.dart".
+- # 0.0.11
+  Implementation of the levenshtein algorithm (but not used yet). Add strings normalization. Add `SearchCompletion`.
