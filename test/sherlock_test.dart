@@ -86,7 +86,7 @@ void main() {
     sherlock.forget();
 
     /// All activities where their description or title contains the word 'cat'.
-    sherlock.query(where: 'title', regex: r'cat', caseSensitive: true);
+    sherlock.query(where: 'title', regex: r'cat');
     sherlock.query(where: 'description', regex: r'cat');
 
     debugPrint(sherlock.results.toString());
