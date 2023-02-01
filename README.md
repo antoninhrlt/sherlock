@@ -43,9 +43,10 @@ See also the [search completion tool](#search-completion-tool).
   Sherlock(
     List<Map<String, dynamic>> elements, 
     Map<String, int> priorities = {'*': 1},
+    NormalizationSettings normalization = /* defaults */
   )
   ```
-  Usages
+  Usage
   ```dart
   /// Users with their first and last name, and the city where they live.
   /// They also have an ID.
@@ -86,6 +87,16 @@ See also the [search completion tool](#search-completion-tool).
 
   final sherlock = Sherlock(elements: users, priorities: priorities);
   ```
+  Specifying `normalization` : 
+  ```dart
+  final normalization = NormalizationSettings(
+    normalizeCase: true,
+    normalizeCaseType: false,
+    removeDiacritics: true,
+  );
+
+  final sherlock = Sherlock(elements: users, normalization: normalization);
+  ```
 - ### Priorities
   The priority map (also known as "priorities") is used to define the priority of each column. If there is no priority set for a column, the default priority will be used instead.
 
@@ -99,6 +110,37 @@ See also the [search completion tool](#search-completion-tool).
     '*': 2,
   ];
   ``` 
+- ### Normalization settings
+  The normalization settings are used to define the type of normalization that will be performed on the strings during searches.
+
+  Prototype
+  ```dart
+  NormalizationSettings normalization;
+  ```
+  ```dart
+  /// Out of the [Sherlock] class.
+
+  NormalizationSettings(
+    // If `true` : case insensitive.
+    // If `false` : case sensitive.
+    bool normalizeCase,
+    // If `true` : no matter if it is snake or camel cased.
+    // If `false` : it matters to be snake or camel cased.
+    bool normalizeCaseType,
+    // If `true` : keeps the diacritics.
+    // If `false` : remove all the diacritics.
+    bool removeDiacritics,
+  )
+  ```
+  
+  These settings are only used by `query` and `queryMatch`. The [smart search](#smart-search) uses its own normalization settings, which is :
+  ```dart
+  NormalizationSettings(
+    normalizeCase: true,
+    normalizeCaseType: false,
+    removeDiacritics: true,
+  );
+  ```
 
 - ### Results
   Performed queries add the matching elements to the field `unsortedResults`, which can be used to get the results as `Result` objects.
@@ -219,7 +261,7 @@ See also the [search completion tool](#search-completion-tool).
   sherlock.queryMatch(where: 'title', match: 'pArC', caseSensitive: false);
   ```
 
-- Smart search
+- ### Smart search
 
   Prototype
   ```dart
