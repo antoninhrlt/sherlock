@@ -3,7 +3,7 @@ library sherlock;
 import 'package:sherlock/result.dart';
 import 'package:sherlock/types.dart';
 import 'package:sherlock/regex.dart';
-import 'package:sherlock/string.dart';
+import 'package:sherlock/normalize.dart';
 
 /// Returns `true`. Can be used to test if "sherlock" is correctly installed.
 bool helloSherlock() {
@@ -17,19 +17,19 @@ class Sherlock {
   final List<Element> elements;
 
   /// Column priorities to sort the results.
-  final PriorityMap priorities;
+  PriorityMap priorities;
 
-  /// Default column priorities
-  static final PriorityMap _defaults = {'*': 1};
+  /// Settings for strings normalization.
+  NormalizeSettings normalizeSettings;
 
   /// The current manipulated element. Used in loops by the query functions.
-  Element _currentElement;
+  Element _currentElement = {};
 
   /// Unsorted research findings, wrapped into a list of [Result].
   ///
   /// Use [sortResults] to sort them still wrapped, or use the [results] getter
   /// to sort them unwrapped.
-  List<Result> unsortedResults;
+  List<Result> unsortedResults = [];
 
   /// Sorted research findings.
   ///
@@ -40,128 +40,131 @@ class Sherlock {
   /// Creates a [Sherlock] instance that will search in [elements] with a given
   /// map of [priorities].
   ///
-  /// The parameter [priorities] is optional however the default value for '*'
-  /// is 1, and if a map of [priorities] is given, '*' will be set to 1.
-  Sherlock({required this.elements, priorities = const {'*': 1}})
-      : unsortedResults = [],
-        _currentElement = {},
-        priorities = {..._defaults, ...priorities};
+  /// If [priorities] are not specified, the default priority is the only one
+  /// specified for the priorities.
+  /// But [priorities] can be specified, and with another "default priority".
+  ///
+  /// The default priority ('*') is 1.
+  ///
+  /// If [normalizeSettings] are not specified, the defaults settings are used.
+  /// See [NormalizeSettings.defaults].
+  Sherlock({
+    required this.elements,
+    PriorityMap priorities = const {'*': 1},
+    this.normalizeSettings = const NormalizeSettings.defaults(),
+  }) : priorities = {
+          ...{'*': 1},
+          ...priorities
+        };
 
   /// Resets the [results].
   void forget() {
     unsortedResults = [];
   }
 
-  /// Smart search in [where], from a natural user [input].
+  /// Smart search in [where], from a *natural* user [input].
   ///
-  /// At first, adds perfect matches, to make them on top of the results list.
-  /// Then, searches the matches for all keywords of the user [input].
-  /// Finally, searches match for any keyword of the user [input].
+  /// Searches are performed in the following order, first searches gives the
+  /// results with the greatest priorities :
+  /// - Being equal
+  /// - Starting with
+  /// - All keywords in
+  /// - At least one keyword in
   ///
-  /// The [where] parameter is either equal to `'*'` for global search (in all
-  /// columns) or a list of columns.
+  /// The specified [normalizeSettings] in [Sherlock] instancing are totally
+  /// ignored. The smart search want to be smart and efficient, it uses its own
+  /// [NormalizeSettings] object.
+  ///
+  /// If [where] is not specified, it is a global search ('*'), otherwise it is
+  /// the key of the column where to search.
   void search({dynamic where = '*', required String input}) {
     Where(where: where).checkValidity();
 
+    // Stores the [normalizeSettings] to restore them after the search.
+    final storedOldNormalizeSettings = normalizeSettings;
+
+    // Its own [NormalizeSettings].
+    // Everything is normalized.
+    normalizeSettings = NormalizeSettings(
+      normalizeCase: true,
+      normalizeCaseType: true,
+      removeDiacritics: true,
+    );
+
+    // Splits the input into keywords.
     final inputKeywords = input.split(' ');
 
-    /// Searches for all the keywords at once.
+    // Creates an easily-manipulable 'where'.
+    var smartWhere = Where(where: where);
+
+    // Avoid duplicate code.
+    void smartQuery({required void Function(String where) query}) {
+      if (smartWhere.isGlobal) {
+        query(where);
+        return;
+      }
+
+      for (var column in smartWhere.columns) {
+        query(column);
+      }
+    }
+
+    // Being equal.
+    smartQuery(
+      query: (where) => queryBool(
+        where: where,
+        fn: (value) => (value.runtimeType == String)
+            ? value.toLowerCase() == input.toLowerCase()
+            : false,
+      ),
+    );
+
+    // Starting with.
+    smartQuery(
+      query: (where) => queryBool(
+        where: where,
+        fn: (value) => (value.runtimeType == String)
+            ? value.toLowerCase().startsWith(input.toLowerCase())
+            : false,
+      ),
+    );
+
+    // Searches for all the keywords at once.
     final regexAll = RegexHelper.all(
       keywords: inputKeywords,
       searchWords: true,
     );
 
-    /// Searches any word from the keywords.
+    // All keywords in.
+    smartQuery(
+      query: (where) => query(where: where, regex: regexAll),
+    );
+
+    // Searches any word from the keywords.
     final regexAny = RegexHelper.any(
       keywords: inputKeywords,
       searchWords: true,
     );
 
-    /// Searches globally.
-    if (Where(where: where).isGlobal) {
-      queryBool(
-        where: where,
-        fn: (value) => (value.runtimeType == String)
-            ? value.toLowerCase() == input.toLowerCase()
-            : false,
-      );
+    // At least all keywords in.
+    smartQuery(
+      query: (where) => query(where: where, regex: regexAny),
+    );
 
-      query(where: where, regex: regexAll, normaliseStrings: true);
-      query(where: where, regex: regexAny, normaliseStrings: true);
-      return;
-    }
-
-    /// Searches in the specified columns.
-
-    /// Specified columns where to search.
-    var columns = Where(where: where).columns;
-
-    /// Searches perfect matches.
-    for (var column in columns) {
-      /// The case does not matter.
-      queryBool(
-        where: column,
-        fn: (value) => (value.runtimeType == String)
-            ? value.toLowerCase() == input.toLowerCase()
-            : false,
-      );
-    }
-
-    /// Searches in specified columns.
-    for (var column in columns) {
-      /// Searches for all the keywords at once.
-      query(where: column, regex: regexAll, normaliseStrings: true);
-    }
-
-    for (var column in columns) {
-      /// Searches any word from the keywords.
-      query(where: column, regex: regexAny, normaliseStrings: true);
-    }
-  }
-
-  /// Browses the [elements] to perform a search, calls [fn] giving the column
-  /// id where the search has to be performed in, and the priority of this
-  /// column.
-  ///
-  /// The callback [fn] can do anything, but it is designed to [_addResult]
-  /// with the matching values.
-  void _queryAny(
-    String where,
-    void Function(String columnId, int priority) fn,
-  ) {
-    for (Element element in elements) {
-      /// Sets the [_currentElement] in order to be used by the other functions.
-      _currentElement = element;
-
-      if (Where(where: where).isGlobal) {
-        /// Performs search in all the columns of the [_currentElement].
-        for (var key in _currentElement.keys) {
-          fn(
-            key,
-            priorities[key] ?? priorities['*']!,
-          );
-        }
-      } else {
-        /// Performs a search in the specified column.
-        fn(
-          where,
-          priorities[where] ?? priorities['*']!,
-        );
-      }
-    }
+    // Restores the [normalizeSettings].
+    normalizeSettings = storedOldNormalizeSettings;
   }
 
   /// Searches for values matching with the [regex], in [where].
   ///
-  /// The parameter [where] is either '*' (global search) or a column key.
+  /// If [where] is not specified, it is a global search ('*'), otherwise it is
+  /// the key of the column where to search.
   void query({
     String where = '*',
     required String regex,
-    bool caseSensitive = false,
-    bool normaliseStrings = false,
   }) {
     /// Creates the [RegExp] from the given [String] regex.
-    var what = RegExp(regex, caseSensitive: caseSensitive);
+    var what = RegExp(regex, caseSensitive: normalizeSettings.caseSensitivity);
 
     /// Adds result when [what] is matching with the [regex].
     ///
@@ -172,12 +175,11 @@ class Sherlock {
       }
 
       if (stringOrList.runtimeType == String) {
-        if (normaliseStrings) {
-          stringOrList = stringOrList.toString().normalized;
-        }
+        // Normalize the string following the [normalizeSettings].
+        stringOrList = stringOrList.toString().normalize(normalizeSettings);
 
-        /// The string contains a value matching with the [regex], adds the current
-        /// element to the results.
+        // The string contains a value matching with the [regex], adds the current
+        // element to the results.
         if (what.hasMatch(stringOrList)) {
           _addResult(priority: priority);
         }
@@ -229,6 +231,9 @@ class Sherlock {
   }
 
   /// Searches for a value corresponding to a boolean expression in [where].
+  ///
+  /// If [where] is not specified, it is a global search ('*'), otherwise it is
+  /// the key of the column where to search.
   void queryBool({
     String where = '*',
     required bool Function(dynamic value) fn,
@@ -247,6 +252,9 @@ class Sherlock {
   ///
   /// The optional parameter [caseSensitive] can be used only when [match] is a
   /// [String] and the matching value is also a string.
+  ///
+  /// If [where] is not specified, it is a global search ('*'), otherwise it is
+  /// the key of the column where to search.
   void queryMatch({
     String where = '*',
     required dynamic match,
@@ -264,9 +272,9 @@ class Sherlock {
       stringComparison = true;
     }
 
-    /// It is case sensitive, both [value] and [match] must be lowercased in
-    /// order to compare no matter the case.
     if (stringComparison && caseSensitive!) {
+      /// It is case sensitive, both [value] and [match] must be lowercased in
+      /// order to compare no matter the case.
       queryBool(
         where: where,
         fn: (value) {
@@ -302,5 +310,37 @@ class Sherlock {
         priority: priority,
       ),
     );
+  }
+
+  /// Browses the [elements] to perform a search, calls [fn] giving the column
+  /// id where the search has to be performed in, and the priority of this
+  /// column.
+  ///
+  /// The callback [fn] can do anything, but it is designed to [_addResult]
+  /// with the matching values.
+  void _queryAny(
+    String where,
+    void Function(String columnId, int priority) fn,
+  ) {
+    for (Element element in elements) {
+      /// Sets the [_currentElement] in order to be used by the other functions.
+      _currentElement = element;
+
+      if (Where(where: where).isGlobal) {
+        /// Performs search in all the columns of the [_currentElement].
+        for (var key in _currentElement.keys) {
+          fn(
+            key,
+            priorities[key] ?? priorities['*']!,
+          );
+        }
+      } else {
+        /// Performs a search in the specified column.
+        fn(
+          where,
+          priorities[where] ?? priorities['*']!,
+        );
+      }
+    }
   }
 }
