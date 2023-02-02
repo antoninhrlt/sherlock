@@ -1,3 +1,5 @@
+- # 0.0.14
+  Fix bug when the input length is greater than column value length.
 - # 0.0.13
   Ameliorate the relevance of the search completion. Implement stop-words.
 - # 0.0.12
