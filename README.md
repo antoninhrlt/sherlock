@@ -203,9 +203,13 @@ See also the [search completion tool](#search-completion-tool).
 - ### Queries
   Prototypes
   ```dart
-  void query(String where = '*', String regex, bool caseSensitive = false) 
+  void query(
+    String where = '*', 
+    String regex, 
+    NormalizationSettings specificNormalization = /* this.normalization */,
+  ) 
   ```
-  Usages
+  Usage
   ```dart
   /// All elements having a title, which contains the word 'game' or 'vr'.
   sherlock.query(where: 'title', regex: r'(game|vr)');
@@ -216,9 +220,17 @@ See also the [search completion tool](#search-completion-tool).
 
   /// All elements having a title, which is equal to 'movie theatre'.
   sherlock.query(where: 'title', regex: r'^Movie Theatre$');
+
   /// All elements having a title, which is equal to 'Movie Theatre', the case 
-  /// matter.
-  sherlock.query(where: 'title', regex: r'^Movie Theatre$', caseSensitive: true);
+  /// matters.
+  sherlock.query(
+    where: 'title', 
+    regex: r'^Movie Theatre$', 
+    specificNormalization: NormalizationSettings(
+      normalizeCase: false,
+      // other normalization settings are the one of [this.normalization].
+    )
+  );
 
   /// All elements with both words 'world' and 'pretty' in their descriptions.
   sherlock.query(where: 'description', regex: r'(?=.*pretty)(?=.*world).*');
@@ -237,9 +249,11 @@ See also the [search completion tool](#search-completion-tool).
   ```dart
   void queryBool(String where = '*', bool Function(dynamic value) fn)
 
-  void queryMatch(String where = '*', dynamic match) {
-    queryBool(where: where, fn: (value) => value == match);
-  }
+  void queryMatch(
+    String where = '*', 
+    dynamic match,
+    NormalizationSettings specificNormalization = /* this.normalization */,
+  )
   ```
   Usages
   ```dart
@@ -254,11 +268,25 @@ See also the [search completion tool](#search-completion-tool).
   ```
   ```dart
   /// All activities having a title corresponding to 'Parc', the case matters.
-  sherlock.queryMatch(where: 'title', match: 'Parc');
+  sherlock.queryMatch(
+    where: 'title', 
+    match: 'Parc',     
+    specificNormalization: NormalizationSettings(
+      normalizeCase: false,
+      // other normalization settings are the one of [this.normalization].
+    ),
+  );
   ```
   ```dart
   /// All activities having a title corresponding to 'parc', no matter the case.
-  sherlock.queryMatch(where: 'title', match: 'pArC', caseSensitive: false);
+  sherlock.queryMatch(
+    where: 'title', 
+    match: 'pArC',     
+    specificNormalization: NormalizationSettings(
+      normalizeCase: true,
+      // other normalization settings are the one of [this.normalization].
+    ),
+  );
   ```
 
 - ### Smart search
@@ -345,8 +373,13 @@ The results could be used in a search widget for example.
   final c = completion.input(input: 'fr', minResults: 3);
   print(c);
 
-  // Try to find at least 3 names matching with 'Fr', and the case matters only for the searches that might be performed if there is less than 3 results.
-  final d = completion.input(input: 'Fr', minResults: 3, caseSensitiveFurtherSearches: true);
+  // Try to find at least 3 names matching with 'Fr', and the case matters only 
+  // for the searches that might be performed if there is less than 3 results.
+  final d = completion.input(
+    input: 'Fr', 
+    minResults: 3, 
+    caseSensitiveFurtherSearches: true,
+  );
   print(d)
   ```
   ```
@@ -419,7 +452,10 @@ The results could be used in a search widget for example.
   final results = completion.input(input: input, minResults: 3);
 
   // The case is ignored.
-  List<Range> unchangedRanges = completion.unchangedRanges(input: input, results: results);
+  List<Range> unchangedRanges = completion.unchangedRanges(
+    input: input, 
+    results: results,
+  );
 
   print(results);
   print(unchangedRanges);
