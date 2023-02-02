@@ -293,7 +293,11 @@ See also the [search completion tool](#search-completion-tool).
 
   Prototype
   ```dart
-  void search(dynamic where, String input)
+  void search(
+    dynamic where = '*', 
+    String input,     
+    int errorTolerance = 2,
+  )
   ```
 
   Usages
