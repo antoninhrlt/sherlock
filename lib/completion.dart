@@ -82,6 +82,37 @@ class SherlockCompletion {
     // Performs further searches to get at least minimum number of results
     // wanted.
     if (minResults != -1 && minResults > sherlock.unsortedResults.length) {
+      // Searches for keyword starting with the [input].
+      sherlock.queryBool(
+        where: where,
+        fn: (value) {
+          // Only matches with strings.
+          if (value.runtimeType != String) {
+            return false;
+          }
+
+          // If [caseSensitiveFurtherSearches] is not defined, [caseSensitive]
+          // is used instead.
+          if (!(caseSensitiveFurtherSearches ?? caseSensitive)) {
+            // Ignores the case
+            for (var keyword in value.toLowerCase().split(' ')) {
+              if (keyword.startsWith(input.toLowerCase())) {
+                return true;
+              }
+            }
+          }
+
+          for (var keyword in value.split(' ')) {
+            if (keyword.startsWith(input.toLowerCase())) {
+              return true;
+            }
+          }
+
+          return false;
+        },
+      );
+
+      // Searches [input] in strings.
       sherlock.queryBool(
         where: where,
         fn: (value) {

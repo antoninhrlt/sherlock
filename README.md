@@ -373,8 +373,8 @@ The results could be used in a search widget for example.
   [Fruits and vegetables market, Fresh fish store]
   ```
   ```dart
-  // Try to find at least 3 names matching with 'fr'.
-  final c = completion.input(input: 'fr', minResults: 3);
+  // Try to find at least 4 names matching with 'fr'.
+  final c = completion.input(input: 'fr', minResults: 4);
   print(c);
 
   // Try to find at least 3 names matching with 'Fr', and the case matters only 
@@ -387,7 +387,7 @@ The results could be used in a search widget for example.
   print(d)
   ```
   ```
-  [Fruits and vegetables market, Fresh fish store, Africa discovery]
+  [Fruits and vegetables market, Fresh fish store, Best place to find fruits, Museum of Africa]
   [Fruits and vegetables market, Fresh fish store]
   ```
   ```dart
@@ -453,7 +453,7 @@ The results could be used in a search widget for example.
 
   ```dart
   const input = 'Fr';
-  final results = completion.input(input: input, minResults: 3);
+  final results = completion.input(input: input, minResults: 4);
 
   // The case is ignored.
   List<Range> unchangedRanges = completion.unchangedRanges(
@@ -465,6 +465,6 @@ The results could be used in a search widget for example.
   print(unchangedRanges);
   ```
   ```
-  [Fruits and vegetables market, Fresh fish store, Africa discovery]
-  [[0, 2], [0, 2], [1, 3]]
+  [Fruits and vegetables market, Fresh fish store, Best place to find fruits, Museum of Africa]
+  [[0, 2], [0, 2], [19, 21], [11, 13]]
   ```
