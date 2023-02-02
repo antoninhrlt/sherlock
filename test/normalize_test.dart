@@ -119,4 +119,29 @@ void main() {
     debugPrint(sherlock.results.toString());
     sherlock.forget();
   });
+
+  test('specificNormalize', () {
+    var sherlock = Sherlock(
+      elements: elements,
+      normalization: NormalizationSettings(
+        normalizeCase: true,
+        normalizeCaseType: true,
+        removeDiacritics: true,
+      ),
+    );
+
+    sherlock.query(where: 'name', regex: r'^something with a weird name$');
+    debugPrint(sherlock.results.toString());
+    sherlock.forget();
+
+    sherlock.query(
+      where: 'name',
+      regex: r'^something with a weird name$',
+      specificNormalization: NormalizationSettings(
+        removeDiacritics: false,
+      ),
+    );
+    debugPrint(sherlock.results.toString());
+    sherlock.forget();
+  });
 }
