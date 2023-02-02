@@ -1,6 +1,6 @@
 name: sherlock
-description: Collection of search functions for local data, customisable with priorities and normalization settings
-version: 0.0.12
+description: Collection of search functions for local data, customisable with priorities and strings normalization settings
+version: 0.0.13
 homepage: https://github.com/antoninhrlt/sherlock
 license: MIT
 

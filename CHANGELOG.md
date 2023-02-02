@@ -1,3 +1,5 @@
+- # 0.0.13
+  Ameliorate the relevance of the search completion. Implement stop-words.
 - # 0.0.12
   Optional specific normalization for `query` and `queryMatch`. The Levenshtein algorithm is now used in the smart search.
 - # 0.0.11
