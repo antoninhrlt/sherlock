@@ -18,6 +18,11 @@ void main() {
 
     sherlock.forget();
 
+    sherlock.search(where: ['title'], input: 'live online');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
     sherlock.search(where: '*', input: 'extreme Vr');
     debugPrint(sherlock.results.toString());
 
@@ -45,5 +50,22 @@ void main() {
     var sherlock = Sherlock(elements: activities2);
     sherlock.search(where: ['title'], input: 'fun surfing');
     debugPrint(sherlock.results.toString());
+    sherlock.forget();
+
+    sherlock.search(where: ['title'], input: 'fun sarfing');
+    debugPrint(sherlock.results.toString());
+    sherlock.forget();
+
+    sherlock.search(where: ['title'], input: 'fun zarfing');
+    debugPrint(sherlock.results.toString());
+    sherlock.forget();
+
+    sherlock.search(where: ['title'], input: 'fon zarfing');
+    debugPrint(sherlock.results.toString());
+    sherlock.forget();
+
+    sherlock.search(where: ['title'], input: 'zarfing');
+    debugPrint(sherlock.results.toString());
+    sherlock.forget();
   });
 }

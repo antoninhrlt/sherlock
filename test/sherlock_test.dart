@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sherlock/normalize.dart';
 import 'package:sherlock/sherlock.dart';
 
 final activities = [
@@ -61,6 +62,12 @@ void main() {
   });
 
   test('query', () {
+    /// All activities where their title is the string 'Extreme VR'.
+    sherlock.query(where: 'title', regex: r'^Extreme VR$');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
     /// All activities where their title contains the word 'vr'.
     sherlock.query(where: 'title', regex: r'vr');
     debugPrint(sherlock.results.toString());
@@ -80,7 +87,7 @@ void main() {
     sherlock.forget();
 
     /// All activities where their description or title contains the word 'cat'.
-    sherlock.query(where: 'title', regex: r'cat', caseSensitive: true);
+    sherlock.query(where: 'title', regex: r'cat');
     sherlock.query(where: 'description', regex: r'cat');
 
     debugPrint(sherlock.results.toString());
@@ -144,11 +151,27 @@ void main() {
   });
 
   test('queryMatch', () {
+    final sherlock = Sherlock(
+      elements: activities,
+      normalization: NormalizationSettings.matching(),
+    );
+
     /// All activities having a title corresponding to 'Parc'.
     sherlock.queryMatch(where: 'title', match: 'Parc');
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
+
+    sherlock.normalization.caseSensitivity = false;
+
+    /// All activities having a title corresponding to 'parc', no matter
+    /// the case.
+    sherlock.queryMatch(where: 'title', match: 'pArC');
+    debugPrint(sherlock.results.toString());
+
+    sherlock.forget();
+
+    sherlock.normalization.caseSensitivity = true;
 
     /// All activities having at least one column's value corresponding to
     /// 'VR immersion'.
@@ -156,5 +179,19 @@ void main() {
     debugPrint(sherlock.results.toString());
 
     sherlock.forget();
+  });
+
+  test('where', () {
+    sherlock.query(regex: r'');
+    try {
+      sherlock.search(where: 5, input: '');
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+    try {
+      sherlock.search(where: 'foo', input: '');
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   });
 }
