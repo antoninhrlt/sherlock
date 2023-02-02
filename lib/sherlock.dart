@@ -35,8 +35,7 @@ class Sherlock {
   /// Sorted research findings.
   ///
   /// Results are unwrapped to a list of [Element].
-  List<Element> get results =>
-      sortResults(unsortedResults: unsortedResults).unwrap();
+  List<Element> get results => sortResults(unsortedResults: unsortedResults).unwrap();
 
   /// Creates a [Sherlock] instance that will search in [elements] with a given
   /// map of [priorities].
@@ -150,8 +149,7 @@ class Sherlock {
 
           final normalizedValue = value.toString().normalize(normalization);
 
-          return normalizedValue.startsWith(input) &&
-              levenshtein(a: normalizedValue, b: input) <= errorTolerance;
+          return normalizedValue.startsWith(input) && levenshtein(a: normalizedValue, b: input) <= errorTolerance;
         },
       ),
     );
@@ -318,8 +316,7 @@ class Sherlock {
             return false;
           }
 
-          return value.toString().normalize(normalization) ==
-              match.toString().normalize(normalization);
+          return value.toString().normalize(normalization) == match.toString().normalize(normalization);
         },
       );
       return;
