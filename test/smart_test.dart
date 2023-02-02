@@ -85,7 +85,10 @@ void main() {
     },
     {
       'title': 'Friends TV show',
-    }
+    },
+    {
+      'title': 'F',
+    },
   ];
 
   test('stopWords', () {

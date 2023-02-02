@@ -1,5 +1,7 @@
 library sherlock;
 
+import 'dart:math';
+
 import 'package:sherlock/levenshtein.dart';
 import 'package:sherlock/result.dart';
 import 'package:sherlock/stopwords.dart';
@@ -163,7 +165,10 @@ class Sherlock {
 
           // Calculates distance with the beginning of the string and the input.
           final distance = levenshtein(
-            a: normalizedValue.substring(0, input.length),
+            a: normalizedValue.substring(
+              0,
+              min(input.length, normalizedValue.length),
+            ),
             b: input,
           );
 
