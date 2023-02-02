@@ -297,6 +297,7 @@ See also the [search completion tool](#search-completion-tool).
     dynamic where = '*', 
     String input,     
     int errorTolerance = 2,
+    List<String> stopWords = StopWords.en,
   )
   ```
 
