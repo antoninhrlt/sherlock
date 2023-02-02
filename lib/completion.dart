@@ -144,6 +144,7 @@ class SherlockCompletion {
 
     // Returns only [maxResults] results.
     if (maxResults != -1 && maxResults < results.length) {
+      results = results.getRange(0, maxResults).toList();
       return stringResults.getRange(0, maxResults).toList();
     }
 
