@@ -5,7 +5,10 @@ import 'package:sherlock/completion.dart';
 void main() {
   final places = [
     {
-      'name': 'Africa discovery',
+      'name': 'Museum of Africa',
+    },
+    {
+      'name': 'Best place to find fruits',
     },
     {
       'name': 'Fruits and vegetables market',
@@ -18,7 +21,7 @@ void main() {
       'name': 'Ball pool',
     },
     {
-      'name': 'Finland discovery',
+      'name': 'Finland palace',
     },
     {
       'name': 90,
