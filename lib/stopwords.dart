@@ -1,10 +1,42 @@
-/// ISO stopwords
-/// See credits on stopwords-iso github repo for all sources
+/// Provides the [removeStopWords] function to remove stop-words from a [String]
+/// object.
+extension RemoveStopWords on String {
+  /// Returns the string without the [stopWords].
+  ///
+  /// Every word of the [stopWords] is removed when found in the string.
+  String removeStopWords(List<String> stopWords) {
+    /// Removes the [stopWords] from the string.
+    String manipulated = '$this ';
+
+    for (String word in split(' ')) {
+      for (String stopWord in stopWords) {
+        if (word.toLowerCase() != stopWord.toLowerCase()) {
+          continue;
+        }
+
+        manipulated = manipulated.replaceAll('$word ', '');
+      }
+    }
+
+    // Removes the added space
+    return manipulated.substring(0, manipulated.length - 1);
+  }
+}
+
+/// Common stop-words of every language identified by the 2-characters ISO code
+/// of the language.
+///
+/// Actually, it is a dart port from :
+/// https://raw.githubusercontent.com/stopwords-iso/stopwords-iso/master/python/stopwordsiso/stopwords-iso.json
+///
+/// See credits on the **stopwords-iso** github repository for all sources :
 /// https://github.com/stopwords-iso/stopwords-iso/blob/master/CREDITS.md
 ///
 /// Usage :
+/// ```dart
+/// // Gets the French stop-words.
 /// List<String> frenchStopWords = StopWords.fr;
-///
+/// ```
 class StopWords {
   /// Return singleton instance of StopWords
   factory StopWords() => _instance;
@@ -12,12 +44,7 @@ class StopWords {
   /// Default private constructor
   StopWords._();
 
-  /// Below are every language identified by 2-chars ISO code
-  /// followed by the list of common stopwords for that language
-  /// Dart port from of
-  /// https://raw.githubusercontent.com/stopwords-iso/stopwords-iso/master/python/stopwordsiso/stopwords-iso.json
-
-  static final List<String> af = [
+  static const List<String> af = [
     "'n",
     "aan",
     "af",
@@ -71,7 +98,7 @@ class StopWords {
     "ŉ"
   ];
 
-  static final List<String> ar = [
+  static const List<String> ar = [
     "،",
     "آض",
     "آمينَ",
@@ -554,7 +581,7 @@ class StopWords {
     "ّأيّان"
   ];
 
-  static final List<String> bg = [
+  static const List<String> bg = [
     "а",
     "автентичен",
     "аз",
@@ -816,7 +843,7 @@ class StopWords {
     "як"
   ];
 
-  static final List<String> bn = [
+  static const List<String> bn = [
     "অতএব",
     "অথচ",
     "অথবা",
@@ -1217,7 +1244,7 @@ class StopWords {
     "হয়"
   ];
 
-  static final List<String> br = [
+  static const List<String> br = [
     "'blam",
     "'d",
     "'m",
@@ -2423,7 +2450,7 @@ class StopWords {
     "zu"
   ];
 
-  static final List<String> ca = [
+  static const List<String> ca = [
     "a",
     "abans",
     "ací",
@@ -2704,7 +2731,7 @@ class StopWords {
     "ús"
   ];
 
-  static final List<String> cs = [
+  static const List<String> cs = [
     "a",
     "aby",
     "ahoj",
@@ -3130,7 +3157,7 @@ class StopWords {
     "že"
   ];
 
-  static final List<String> da = [
+  static const List<String> da = [
     "ad",
     "af",
     "aldrig",
@@ -3303,7 +3330,7 @@ class StopWords {
     "været"
   ];
 
-  static final List<String> de = [
+  static const List<String> de = [
     "a",
     "ab",
     "aber",
@@ -3926,7 +3953,7 @@ class StopWords {
     "übrigens"
   ];
 
-  static final List<String> el = [
+  static const List<String> el = [
     "ένα",
     "έναν",
     "ένας",
@@ -4776,7 +4803,7 @@ class StopWords {
     "∆ιχως"
   ];
 
-  static final List<String> en = [
+  static const List<String> en = [
     "'ll",
     "'tis",
     "'twas",
@@ -6077,7 +6104,7 @@ class StopWords {
     "zr"
   ];
 
-  static final List<String> eo = [
+  static const List<String> eo = [
     "adiaŭ",
     "ajn",
     "al",
@@ -6253,7 +6280,7 @@ class StopWords {
     "ŝin"
   ];
 
-  static final List<String> es = [
+  static const List<String> es = [
     "0",
     "1",
     "2",
@@ -6988,7 +7015,7 @@ class StopWords {
     "últimos"
   ];
 
-  static final List<String> et = [
+  static const List<String> et = [
     "aga",
     "ei",
     "et",
@@ -7026,7 +7053,7 @@ class StopWords {
     "ära"
   ];
 
-  static final List<String> eu = [
+  static const List<String> eu = [
     "al",
     "anitz",
     "arabera",
@@ -7127,7 +7154,7 @@ class StopWords {
     "zuten"
   ];
 
-  static final List<String> fa = [
+  static const List<String> fa = [
     "!",
     ",",
     ".",
@@ -7929,7 +7956,7 @@ class StopWords {
     "۹"
   ];
 
-  static final List<String> fi = [
+  static const List<String> fi = [
     "aiemmin",
     "aika",
     "aikaa",
@@ -8779,7 +8806,7 @@ class StopWords {
     "älä"
   ];
 
-  static final List<String> fr = [
+  static const List<String> fr = [
     "a",
     "abord",
     "absolument",
@@ -9473,7 +9500,7 @@ class StopWords {
     "ô"
   ];
 
-  static final List<String> ga = [
+  static const List<String> ga = [
     "a",
     "ach",
     "ag",
@@ -9585,7 +9612,7 @@ class StopWords {
     "ónár"
   ];
 
-  static final List<String> gl = [
+  static const List<String> gl = [
     "a",
     "alí",
     "ao",
@@ -9748,7 +9775,7 @@ class StopWords {
     "ós"
   ];
 
-  static final List<String> gu = [
+  static const List<String> gu = [
     "અંગે",
     "અંદર",
     "અથવા",
@@ -9975,7 +10002,7 @@ class StopWords {
     "હોવા"
   ];
 
-  static final List<String> ha = [
+  static const List<String> ha = [
     "a",
     "amma",
     "ba",
@@ -10017,7 +10044,7 @@ class StopWords {
     "za"
   ];
 
-  static final List<String> he = [
+  static const List<String> he = [
     "אבל",
     "או",
     "אולי",
@@ -10214,7 +10241,7 @@ class StopWords {
     "תחת"
   ];
 
-  static final List<String> hi = [
+  static const List<String> hi = [
     "अंदर",
     "अत",
     "अदि",
@@ -10442,7 +10469,7 @@ class StopWords {
     "होने"
   ];
 
-  static final List<String> hr = [
+  static const List<String> hr = [
     "a",
     "ako",
     "ali",
@@ -10624,7 +10651,7 @@ class StopWords {
     "što"
   ];
 
-  static final List<String> hu = [
+  static const List<String> hu = [
     "a",
     "abba",
     "abban",
@@ -11416,7 +11443,7 @@ class StopWords {
     "őt"
   ];
 
-  static final List<String> hy = [
+  static const List<String> hy = [
     "այդ",
     "այլ",
     "այն",
@@ -11464,7 +11491,7 @@ class StopWords {
     "և"
   ];
 
-  static final List<String> id = [
+  static const List<String> id = [
     "ada",
     "adalah",
     "adanya",
@@ -12225,7 +12252,7 @@ class StopWords {
     "yang"
   ];
 
-  static final List<String> it = [
+  static const List<String> it = [
     "a",
     "abbastanza",
     "abbia",
@@ -12860,7 +12887,7 @@ class StopWords {
     "è"
   ];
 
-  static final List<String> ja = [
+  static const List<String> ja = [
     "あそこ",
     "あっ",
     "あの",
@@ -12997,7 +13024,7 @@ class StopWords {
     "貴方方"
   ];
 
-  static final List<String> ko = [
+  static const List<String> ko = [
     "!",
     "\"",
     "\$",
@@ -13679,7 +13706,7 @@ class StopWords {
     "￥"
   ];
 
-  static final List<String> ku = [
+  static const List<String> ku = [
     "ئێمە",
     "ئێوە",
     "ئەم",
@@ -13744,7 +13771,7 @@ class StopWords {
     "ی"
   ];
 
-  static final List<String> la = [
+  static const List<String> la = [
     "a",
     "ab",
     "ac",
@@ -13796,7 +13823,7 @@ class StopWords {
     "vel"
   ];
 
-  static final List<String> lt = [
+  static const List<String> lt = [
     "abi",
     "abidvi",
     "abiejose",
@@ -14273,7 +14300,7 @@ class StopWords {
     "þemiau"
   ];
 
-  static final List<String> lv = [
+  static const List<String> lv = [
     "aiz",
     "ap",
     "apakš",
@@ -14437,7 +14464,7 @@ class StopWords {
     "šaipus"
   ];
 
-  static final List<String> mr = [
+  static const List<String> mr = [
     "अधिक",
     "अनेक",
     "अशी",
@@ -14539,7 +14566,7 @@ class StopWords {
     "होते"
   ];
 
-  static final List<String> ms = [
+  static const List<String> ms = [
     "abdul",
     "abdullah",
     "acara",
@@ -15017,7 +15044,7 @@ class StopWords {
     "yang"
   ];
 
-  static final List<String> nl = [
+  static const List<String> nl = [
     "aan",
     "aangaande",
     "aangezien",
@@ -15433,7 +15460,7 @@ class StopWords {
     "zult"
   ];
 
-  static final List<String> no = [
+  static const List<String> no = [
     "alle",
     "andre",
     "arbeid",
@@ -15657,7 +15684,7 @@ class StopWords {
     "å"
   ];
 
-  static final List<String> pl = [
+  static const List<String> pl = [
     "a",
     "aby",
     "ach",
@@ -15989,7 +16016,7 @@ class StopWords {
     "żeby"
   ];
 
-  static final List<String> pt = [
+  static const List<String> pt = [
     "a",
     "acerca",
     "adeus",
@@ -16552,7 +16579,7 @@ class StopWords {
     "último"
   ];
 
-  static final List<String> ro = [
+  static const List<String> ro = [
     "a",
     "abia",
     "acea",
@@ -16989,7 +17016,7 @@ class StopWords {
     "ţie"
   ];
 
-  static final List<String> ru = [
+  static const List<String> ru = [
     "c",
     "а",
     "алло",
@@ -17551,7 +17578,7 @@ class StopWords {
     "являюсь"
   ];
 
-  static final List<String> sk = [
+  static const List<String> sk = [
     "a",
     "aby",
     "aj",
@@ -17972,7 +17999,7 @@ class StopWords {
     "že"
   ];
 
-  static final List<String> sl = [
+  static const List<String> sl = [
     "a",
     "ali",
     "april",
@@ -18421,7 +18448,7 @@ class StopWords {
     "že"
   ];
 
-  static final List<String> so = [
+  static const List<String> so = [
     "aad",
     "albaabkii",
     "atabo",
@@ -18454,7 +18481,7 @@ class StopWords {
     "waxuu"
   ];
 
-  static final List<String> st = [
+  static const List<String> st = [
     "a",
     "ba",
     "bane",
@@ -18488,7 +18515,7 @@ class StopWords {
     "tse"
   ];
 
-  static final List<String> sv = [
+  static const List<String> sv = [
     "aderton",
     "adertonde",
     "adjö",
@@ -18909,7 +18936,7 @@ class StopWords {
     "övre"
   ];
 
-  static final List<String> sw = [
+  static const List<String> sw = [
     "akasema",
     "alikuwa",
     "alisema",
@@ -18986,7 +19013,7 @@ class StopWords {
     "zake"
   ];
 
-  static final List<String> th = [
+  static const List<String> th = [
     "กล่าว",
     "กว่า",
     "กัน",
@@ -19105,7 +19132,7 @@ class StopWords {
     "้ง"
   ];
 
-  static final List<String> tl = [
+  static const List<String> tl = [
     "akin",
     "aking",
     "ako",
@@ -19255,7 +19282,7 @@ class StopWords {
     "walang"
   ];
 
-  static final List<String> tr = [
+  static const List<String> tr = [
     "acaba",
     "acep",
     "adamakıllı",
@@ -19762,7 +19789,7 @@ class StopWords {
     "ţöyle"
   ];
 
-  static final List<String> uk = [
+  static const List<String> uk = [
     "авжеж",
     "адже",
     "але",
@@ -19838,7 +19865,7 @@ class StopWords {
     "її"
   ];
 
-  static final List<String> ur = [
+  static const List<String> ur = [
     "آئی",
     "آئے",
     "آج",
@@ -20358,7 +20385,7 @@ class StopWords {
     "یہبں"
   ];
 
-  static final List<String> vi = [
+  static const List<String> vi = [
     "a ha",
     "a-lô",
     "ai",
@@ -21006,7 +21033,7 @@ class StopWords {
     "ử"
   ];
 
-  static final List<String> yo = [
+  static const List<String> yo = [
     "a",
     "an",
     "bá",
@@ -21069,7 +21096,7 @@ class StopWords {
     "ọ̀pọ̀lọpọ̀"
   ];
 
-  static final List<String> zh = [
+  static const List<String> zh = [
     "、",
     "。",
     "〈",
@@ -21866,7 +21893,7 @@ class StopWords {
     "￥"
   ];
 
-  static final List<String> zu = [
+  static const List<String> zu = [
     "futhi",
     "kahle",
     "kakhulu",

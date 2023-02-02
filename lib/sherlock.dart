@@ -2,6 +2,7 @@ library sherlock;
 
 import 'package:sherlock/levenshtein.dart';
 import 'package:sherlock/result.dart';
+import 'package:sherlock/stopwords.dart';
 import 'package:sherlock/types.dart';
 import 'package:sherlock/regex.dart';
 import 'package:sherlock/normalize.dart';
@@ -76,17 +77,25 @@ class Sherlock {
   /// The smart search want to be smart and efficient, it uses its own
   /// [NormalizationSettings].
   ///
+  /// If [stopWords] are not specified, English stop-words are used, otherwise
+  /// they are a list of words that will be removed of the input. A specific
+  /// list of [stopWords] can be specified to use another language for example.
+  /// > See [StopWords].
+  ///
   /// If [where] is not specified, it is a global search ('*'), otherwise it is
   /// the key of the column where to search.
   ///
-  /// The [errorTolerance] is equal to the accepted Levenshtein distance get
+  /// The [errorTolerance] corresponds the accepted Levenshtein distance get
   /// during searches.
+  /// > See https://en.wikipedia.org/wiki/Levenshtein_distance.
   ///
-  /// See https://en.wikipedia.org/wiki/Levenshtein_distance.
+  /// If [errorTolerance] is not specified, it is equal to 2, which basically
+  /// allows small typing errors.
   void search({
     dynamic where = '*',
     required String input,
     int errorTolerance = 2,
+    List<String> stopWords = StopWords.en,
   }) {
     Where(where: where).checkValidity();
 
@@ -100,8 +109,10 @@ class Sherlock {
       removeDiacritics: true,
     );
 
+    // Normalizes the input string and remove the [stopWords].
+    input = input.normalize(normalization).removeStopWords(stopWords);
+
     // Splits the input into keywords.
-    input = input.normalize(normalization);
     final inputKeywords = input.split(' ');
 
     // Creates an easily-manipulable 'where'.
@@ -150,8 +161,13 @@ class Sherlock {
 
           final normalizedValue = value.toString().normalize(normalization);
 
-          return normalizedValue.startsWith(input) &&
-              levenshtein(a: normalizedValue, b: input) <= errorTolerance;
+          // Calculates distance with the beginning of the string and the input.
+          final distance = levenshtein(
+            a: normalizedValue.substring(0, input.length),
+            b: input,
+          );
+
+          return distance <= errorTolerance;
         },
       ),
     );

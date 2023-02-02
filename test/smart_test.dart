@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sherlock/sherlock.dart';
+import 'package:sherlock/stopwords.dart';
 
 import 'sherlock_test.dart';
 
@@ -65,6 +66,32 @@ void main() {
     sherlock.forget();
 
     sherlock.search(where: ['title'], input: 'zarfing');
+    debugPrint(sherlock.results.toString());
+    sherlock.forget();
+  });
+
+  final activities3 = [
+    {
+      'title': 'The park of fun',
+    },
+    {
+      'title': 'Amazing and fun surfing for friends',
+    },
+    {
+      'title': 'Fun surfing',
+    },
+    {
+      'title': 'With friends',
+    },
+    {
+      'title': 'Friends TV show',
+    }
+  ];
+
+  test('stopWords', () {
+    var sherlock = Sherlock(elements: activities3);
+    sherlock.search(where: ['title'], input: 'with the friends the');
+
     debugPrint(sherlock.results.toString());
     sherlock.forget();
   });
