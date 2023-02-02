@@ -1,5 +1,6 @@
 library sherlock;
 
+import 'package:sherlock/levenshtein.dart';
 import 'package:sherlock/result.dart';
 import 'package:sherlock/types.dart';
 import 'package:sherlock/regex.dart';
@@ -77,7 +78,16 @@ class Sherlock {
   ///
   /// If [where] is not specified, it is a global search ('*'), otherwise it is
   /// the key of the column where to search.
-  void search({dynamic where = '*', required String input}) {
+  ///
+  /// The [errorTolerance] is equal to the accepted Levenshtein distance get
+  /// during searches.
+  ///
+  /// See https://en.wikipedia.org/wiki/Levenshtein_distance.
+  void search({
+    dynamic where = '*',
+    required String input,
+    int errorTolerance = 2,
+  }) {
     Where(where: where).checkValidity();
 
     // Stores the [normalization] to restore it at the end of the search.
@@ -111,9 +121,21 @@ class Sherlock {
 
     // Being equal.
     smartQuery(
-      query: (where) => queryMatch(
+      query: (where) => queryBool(
         where: where,
-        match: input,
+        fn: (value) {
+          if (value.runtimeType != String) {
+            return false;
+          }
+
+          // If the distance is 0, [value] and [input] are equal.
+          final distance = levenshtein(
+            a: value.toString().normalize(normalization),
+            b: input,
+          );
+
+          return distance <= errorTolerance;
+        },
       ),
     );
 
@@ -121,9 +143,16 @@ class Sherlock {
     smartQuery(
       query: (where) => queryBool(
         where: where,
-        fn: (value) => (value.runtimeType == String)
-            ? value.toLowerCase().startsWith(input)
-            : false,
+        fn: (value) {
+          if (value.runtimeType != String) {
+            return false;
+          }
+
+          final normalizedValue = value.toString().normalize(normalization);
+
+          return normalizedValue.startsWith(input) &&
+              levenshtein(a: normalizedValue, b: input) <= errorTolerance;
+        },
       ),
     );
 
