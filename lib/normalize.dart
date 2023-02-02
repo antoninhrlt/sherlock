@@ -4,7 +4,7 @@ import 'package:diacritic/diacritic.dart' as diacritic;
 class NormalizationSettings {
   /// The actual settings being a map with the settings id and their boolean
   /// value to known if this type of normalization has to be done or not.
-  final Map<String, bool> settings;
+  final Map<String, bool?> settings;
 
   /// Values `true` are the settings that will be applied to the strings.
   /// For example, if [normalizeCase] is `true`, it will be case-insensitive.
@@ -19,9 +19,9 @@ class NormalizationSettings {
   /// Setting [removeDiacritics] is used to remove the diacritics (accents and
   /// other additional symbol on the characters).
   NormalizationSettings({
-    required bool normalizeCase,
-    required bool normalizeCaseType,
-    required bool removeDiacritics,
+    bool? normalizeCase,
+    bool? normalizeCaseType,
+    bool? removeDiacritics,
   }) : settings = {
           'case': normalizeCase,
           'caseType': normalizeCaseType,
@@ -42,6 +42,21 @@ class NormalizationSettings {
           'caseType': false,
           'diacritics': true,
         };
+
+  /// Updates the settings from another [NormalizationSettings] object [source].
+  ///
+  /// Null elements of [source] stands for not changing the values.
+  void updateFrom(NormalizationSettings source) {
+    for (var id in ['case', 'caseType', 'diacritics']) {
+      // Does not change because the given source's value is null.
+      if (source[id] == null) {
+        continue;
+      }
+
+      // Updates setting from [source].
+      settings[id] = source[id];
+    }
+  }
 
   /// The defaults normalizing settings for a perfect match between strings.
   /// ```dart
@@ -66,17 +81,17 @@ class NormalizationSettings {
     settings['case'] = !caseSensitivity;
   }
 
-  bool get caseSensitivity => !this['case'];
+  bool get caseSensitivity => !(this['case'] ?? false);
 
   /// Gets a setting from [settings] from its [id].
   ///
   /// Throws an error when the [id] is not corresponding to a valid setting.
-  bool operator [](String id) {
+  bool? operator [](String id) {
     if (!settings.containsKey(id)) {
       throw '$id is not a valid setting';
     }
 
-    return settings[id]!;
+    return settings[id];
   }
 
   /// Returns [settings] into [String].
@@ -93,17 +108,17 @@ extension Normalize on String {
     String normalized = this;
 
     // Normalizes the case type, but keep the case (upper or lower)
-    if (settings['caseType']) {
+    if (settings['caseType'] ?? false) {
       normalized = normalized.normalizeCaseType();
     }
 
     // Lowercases the string.
-    if (settings['case']) {
+    if (settings['case'] ?? false) {
       normalized = normalized.toLowerCase();
     }
 
     // Removes the diacritics.
-    if (settings['diacritics']) {
+    if (settings['diacritics'] ?? false) {
       normalized = normalized.removeDiacritics();
     }
 

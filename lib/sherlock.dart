@@ -71,20 +71,19 @@ class Sherlock {
   /// - All keywords in
   /// - At least one keyword in
   ///
-  /// The specified [normalizeSettings] in [Sherlock] instancing are totally
-  /// ignored. The smart search want to be smart and efficient, it uses its own
-  /// [NormalizeSettings] object.
+  /// The specified [normalization] in [Sherlock] instancing is totally ignored.
+  /// The smart search want to be smart and efficient, it uses its own
+  /// [NormalizationSettings].
   ///
   /// If [where] is not specified, it is a global search ('*'), otherwise it is
   /// the key of the column where to search.
   void search({dynamic where = '*', required String input}) {
     Where(where: where).checkValidity();
 
-    // Stores the [normalizeSettings] to restore them after the search.
+    // Stores the [normalization] to restore it at the end of the search.
     final storedOldNormalization = normalization;
 
-    // Its own [NormalizeSettings].
-    // Everything is normalized.
+    // Its own [NormalizationSettings].
     normalization = NormalizationSettings(
       normalizeCase: true,
       normalizeCaseType: false,
@@ -150,7 +149,7 @@ class Sherlock {
       query: (where) => query(where: where, regex: regexAny),
     );
 
-    // Restores the [normalizeSettings].
+    // Restores the [normalization].
     normalization = storedOldNormalization;
   }
 
@@ -159,11 +158,20 @@ class Sherlock {
   /// If [where] is not specified, it is a global search ('*'), otherwise it is
   /// the key of the column where to search.
   ///
-  /// Applies the [normalizeSettings].
+  /// Applies the [normalization] or the [specificNormalization] when specified.
   void query({
     String where = '*',
     required String regex,
+    NormalizationSettings? specificNormalization,
   }) {
+    // Stores the [normalization] to restore it at the end of the query.
+    var savedOldNormalization = normalization;
+
+    // Uses the specific normalization parameters.
+    if (specificNormalization != null) {
+      normalization.updateFrom(specificNormalization);
+    }
+
     /// Creates the [RegExp] from the given [String] regex.
     var what = RegExp(regex, caseSensitive: normalization.caseSensitivity);
 
@@ -212,6 +220,9 @@ class Sherlock {
     _queryAny(where, (columnId, priority) {
       addWhenMatch(_currentElement[columnId], priority);
     });
+
+    // Restores the [normalization].
+    normalization = savedOldNormalization;
   }
 
   /// Searches for values when a key exists for [what] in [where].
@@ -253,11 +264,20 @@ class Sherlock {
   /// If [where] is not specified, it is a global search ('*'), otherwise it is
   /// the key of the column where to search.
   ///
-  /// Applies the [normalizeSettings].
+  /// Applies the [normalization] or the [specificNormalization] when specified.
   void queryMatch({
     String where = '*',
     required dynamic match,
+    NormalizationSettings? specificNormalization,
   }) {
+    // Stores the [normalization] to restore it at the end of the query.
+    var savedOldNormalization = normalization;
+
+    // Uses the specific normalization parameters.
+    if (specificNormalization != null) {
+      normalization.updateFrom(specificNormalization);
+    }
+
     bool stringComparison = match.runtimeType == String;
 
     if (stringComparison) {
@@ -278,6 +298,9 @@ class Sherlock {
 
     /// Dynamic comparison.
     queryBool(where: where, fn: (value) => value == match);
+
+    // Restores the [normalization].
+    normalization = savedOldNormalization;
   }
 
   /// Adds the [_currentElement] wrapped into a [Result] object, into the
