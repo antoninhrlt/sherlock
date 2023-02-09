@@ -1,3 +1,5 @@
+- # 0.0.15
+  Stop using the Levenshtein algorithm for "starts with" query in smart search. 
 - # 0.0.14
   Fix bug when the input length is greater than column value length.
 - # 0.0.13
