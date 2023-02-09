@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sherlock/sherlock.dart';
-import 'package:sherlock/stopwords.dart';
 
 import 'sherlock_test.dart';
 

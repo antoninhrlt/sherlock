@@ -1,7 +1,5 @@
 library sherlock;
 
-import 'dart:math';
-
 import 'package:sherlock/levenshtein.dart';
 import 'package:sherlock/result.dart';
 import 'package:sherlock/stopwords.dart';
