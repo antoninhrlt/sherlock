@@ -162,17 +162,7 @@ class Sherlock {
           }
 
           final normalizedValue = value.toString().normalize(normalization);
-
-          // Calculates distance with the beginning of the string and the input.
-          final distance = levenshtein(
-            a: normalizedValue.substring(
-              0,
-              min(input.length, normalizedValue.length),
-            ),
-            b: input,
-          );
-
-          return distance <= errorTolerance;
+          return input.startsWith(normalizedValue);
         },
       ),
     );
