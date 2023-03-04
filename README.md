@@ -1,5 +1,5 @@
 # sherlock
-Collection of search and smart search functions, for local data and given priorities
+Perform efficient and customized searches on local data. Built-in autocomplete feature for search bars.
 
 ## Usage
 Sherlock needs the elements in which it (he?) will search. Priorities can be specified for results sorting, but it is not mandatory.
