@@ -1,3 +1,5 @@
+- # 0.1.0
+  First actual release of the project. Description updated.
 - # 0.0.15
   Levenshtein algorithm no longer used for the "starts with" query in smart 
   search.
