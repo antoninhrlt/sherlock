@@ -1,3 +1,5 @@
+- # 0.1.1
+  Description updated in the "README.md" file too.
 - # 0.1.0
   First actual release of the project. Description updated.
 - # 0.0.15
