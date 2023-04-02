@@ -1,56 +1,70 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:sherlock/sherlock.dart';
 import 'package:sherlock/widget/input.dart';
 
 class WatsonSearchBar extends StatefulWidget {
+  /// Decoration for the search bar.
+  final BoxDecoration? decoration;
+
+  /// Fixed width for the search bar.
+  final double? width;
+
+  /// Fixed height for the search bar.
+  final double? height;
+
+  /// Whether the search bar can be iconized.
+  ///
+  /// True by default.
+  final bool iconize;
+
+  /// Whether the search bar is iconized when created. Does not iconize the
+  /// search bar if [iconize] is false.
+  ///
+  /// True by default.
+  final bool initiallyIconized;
+
   /// The icon next to the search input.
   ///
-  /// If [iconized] is `true`, shows the search input. Otherwise, it only
+  /// If [iconize] is `true`, it shows the search input. Otherwise, it only
   /// decorates the search bar.
   final Icon searchIcon;
 
-  /// The icon used as a button to cancel the search.
+  /// The icon used as a button to iconize the search.
   ///
-  /// If [iconized] is `true`, hides the search input. Otherwise, it is never
+  /// If [iconize] is `true`, it hides the search input. Otherwise, it is never
   /// displayed.
   final Icon closeIcon;
 
-  /// The width of the box containing the whole search bar.
-  final double? width;
+  /// Function called when the text written in the input has changed.
+  final Function(String textChanged)? onTextChanged;
 
-  /// The height of the box containing the whole search bar.
-  final double? height;
-
-  /// The margin of the box containing the whole search bar.
-  final EdgeInsets? margin;
-
-  /// The decoration of the box containing the whole search bar.
-  final BoxDecoration? decoration;
-
-  /// The controller to programmatically show or hide the input.
-  final SearchBarController? controller;
-
-  /// The input inside the search bar where the user types their search.
-  final SearchInput searchInput;
-
-  /// Whether the search bar is iconized or not.
+  /// Function called when the text written in the input is submitted.
   ///
-  /// When the search bar is iconized, the input is hidden and the only thing
-  /// that appears in the search bar is the search button to make the search
-  /// input appears.
-  final bool iconized;
+  /// Returns a sherlock object which should have performed the search with
+  /// the [submittedText] input.
+  final Sherlock Function(String submittedText)? onSubmit;
+
+  /// Function called when [onSubmit] returns. Builds the results in the widget
+  /// but just under the search bar.
+  final Widget Function(Sherlock sherlock)? buildResults;
+
+  /// The text displayed in the input in order to help the user know what to
+  /// write.
+  final String? hintText;
 
   const WatsonSearchBar({
     super.key,
-    required this.searchInput,
-    this.searchIcon = const Icon(Icons.search),
-    this.closeIcon = const Icon(Icons.arrow_back),
-    this.iconized = false,
+    this.decoration,
     this.width,
     this.height,
-    this.margin,
-    this.decoration,
-    this.controller,
+    this.iconize = true,
+    this.initiallyIconized = true,
+    this.onTextChanged,
+    this.onSubmit,
+    this.buildResults,
+    this.searchIcon = const Icon(Icons.search),
+    this.closeIcon = const Icon(Icons.arrow_back),
+    this.hintText,
   });
 
   @override
@@ -58,61 +72,72 @@ class WatsonSearchBar extends StatefulWidget {
 }
 
 class _SearchBarState extends State<WatsonSearchBar> {
-  /// Whether the input inside the search bar is shown or hidden.
-  bool _showInput = false;
+  /// Input for the search bar.
+  late WatsonSearchInput _input;
+  late Widget results;
 
-  /// Gets the visibility of the input in the search bar.
-  bool get isInputVisible => _showInput;
+  bool _showInput = true;
 
-  /// Defines if the input is going to be shown or hidden.
-  ///
-  /// On change, it updates the widget.
-  void changeInputVisibility(bool value) {
-    // Nothing to change
-    if (value == isInputVisible) return;
+  bool get isIconized => _showInput;
 
-    if (widget.iconized) {
-      // Updates the visibility value.
+  set isIconized(bool value) {
+    if (value == isIconized) return;
+
+    if (widget.iconize) {
       _showInput = value;
-      // Updates the widget.
       setState(() {});
     }
   }
-
-  /// Makes the input shown.
-  void showInput() => changeInputVisibility(true);
-
-  /// Makes the input hidden.
-  void hideInput() => changeInputVisibility(false);
 
   @override
   void initState() {
     super.initState();
 
-    // Initial state of show/hide of the input is defined by the widget.
-    _showInput = (!widget.iconized);
+    if (widget.iconize) {
+      _showInput = !widget.initiallyIconized;
+    }
+
+    _input = WatsonSearchInput(
+      hintText: widget.hintText,
+      onTextChanged: widget.onTextChanged,
+      onSubmit: (submittedText) {
+        if (widget.onSubmit == null) {
+          return;
+        }
+
+        final sherlock = widget.onSubmit!(submittedText);
+
+        debugPrint('oui');
+
+        if (widget.buildResults == null) {
+          debugPrint('oui2');
+
+          return;
+        }
+
+        results = widget.buildResults!(sherlock);
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: widget.margin ?? const EdgeInsets.all(10.0),
-      padding: const EdgeInsets.all(5),
-      width: widget.width,
-      height: widget.height,
       decoration: widget.decoration ??
           BoxDecoration(
             borderRadius: BorderRadius.circular(30.0),
             color: Theme.of(context).focusColor,
           ),
-      child: _showInput
+      width: widget.width,
+      height: widget.height,
+      child: isIconized
           ? Row(
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 buildIconButton(context),
                 Expanded(
-                  child: widget.searchInput,
+                  child: _input,
                 ),
               ],
             )
@@ -124,27 +149,13 @@ class _SearchBarState extends State<WatsonSearchBar> {
   Widget buildIconButton(BuildContext context) {
     return IconButton(
       onPressed: () {
-        if (widget.iconized) {
-          isInputVisible ? hideInput() : showInput();
+        // When the search bar is iconized, it shows the input and when the
+        //search bar is not iconized, it hides the input.
+        if (widget.iconize) {
+          isIconized = !isIconized;
         }
       },
       icon: !_showInput ? widget.searchIcon : widget.closeIcon,
     );
   }
-}
-
-class SearchBarController {
-  /// Creates a controller to show or hide the search bar's input.
-  SearchBarController();
-
-  _SearchBarState? _state;
-
-  /// Disposes this controller.
-  void dispose() => _state = null;
-
-  /// Shows the search bar's input when it was previously hidden via [hide].
-  void show() => _state?.showInput();
-
-  /// Hides the search bar's input when it was previously shown via [show].
-  void hide() => _state?.hideInput();
 }

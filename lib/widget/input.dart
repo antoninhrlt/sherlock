@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:sherlock/completion.dart';
 
 /// The [TextField] where the user will type their search.
-class SearchInput extends StatefulWidget {
-  const SearchInput({
+class WatsonSearchInput extends StatefulWidget {
+  const WatsonSearchInput({
     super.key,
     this.hintText,
     this.onTextChanged,
     this.onSubmit,
   });
 
-  /// Called when the text in the input has changed.
-  final Function(String textChanged)? onTextChanged;
-
-  /// Called when the text in the input has been submitted.
-  final Function(String submittedText)? onSubmit;
-
   /// The text displayed in the input in order to help the user know what to
   /// write.
   final String? hintText;
 
+  /// Function called when the text written in the input has changed.
+  final Function(String textChanged)? onTextChanged;
+
+  /// Function called when the text written in the input is submitted.
+  final Function(String submittedText)? onSubmit;
+
   @override
-  State<StatefulWidget> createState() => _SearchInputState();
+  State<StatefulWidget> createState() => _WatsonSearchInputState();
 }
 
-class _SearchInputState extends State<SearchInput> {
+class _WatsonSearchInputState extends State<WatsonSearchInput> {
+  // Whether the close button is shown.
   bool showClose = false;
+
+  // Text controller for the input.
   TextEditingController textArea = TextEditingController();
 
   /// Makes the close button displayed if the [textChanged] is not empty.
