@@ -12,8 +12,28 @@ class RegexHelper {
 
     for (var keyword in keywords) {
       if (searchWords) {
-        // The word is in the string.
+        // The perfect word is in the string.
         keyword = r'\b' + keyword + r'\b';
+      }
+
+      regex += '(?=.*$keyword)';
+    }
+
+    return regex + r'.*)';
+  }
+
+  /// Returns a regex [String] matching with all the words from the [keywords]
+  /// but it does not need to be the perfect word like with [all].
+  static String flexAll({
+    required List<String> keywords,
+    bool searchWords = false,
+  }) {
+    String regex = r'(';
+
+    for (var keyword in keywords) {
+      if (searchWords) {
+        // The perfect word is in the string.
+        keyword = r'\b' + keyword;
       }
 
       regex += '(?=.*$keyword)';
@@ -36,6 +56,34 @@ class RegexHelper {
       if (searchWords) {
         // The word is in the string.
         regex += r'\b' + keyword + r'\b';
+      } else {
+        // Keyword's characters are in the string.
+        regex += keyword;
+      }
+
+      if (keyword != keywords.last) {
+        regex += r'|';
+      }
+    }
+
+    return regex + r')';
+  }
+
+  /// Returns a regex [String] matching with any word from the [keywords]
+  /// but it does not need to be the perfect word like with [any].
+  ///
+  /// Set [searchWords] `true` for a word search instead of keyword's
+  /// characters search.
+  static String flexAny({
+    required List<String> keywords,
+    bool searchWords = false,
+  }) {
+    String regex = r'(';
+
+    for (var keyword in keywords) {
+      if (searchWords) {
+        // The word is in the string.
+        regex += r'\b' + keyword;
       } else {
         // Keyword's characters are in the string.
         regex += keyword;
