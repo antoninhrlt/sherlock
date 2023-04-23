@@ -36,8 +36,7 @@ class Sherlock {
   /// Sorted research findings.
   ///
   /// Results are unwrapped to a list of [Element].
-  List<Element> get results =>
-      sortResults(unsortedResults: unsortedResults).unwrap();
+  List<Element> get results => sortResults(unsortedResults: unsortedResults).unwrap();
 
   /// Creates a [Sherlock] instance that will search in [elements] with a given
   /// map of [priorities].
@@ -166,7 +165,7 @@ class Sherlock {
     );
 
     // Searches for all the keywords at once.
-    final regexAll = RegexHelper.all(
+    final regexAll = RegexHelper.flexAll(
       keywords: inputKeywords,
       searchWords: true,
     );
@@ -327,8 +326,7 @@ class Sherlock {
             return false;
           }
 
-          return value.toString().normalize(normalization) ==
-              match.toString().normalize(normalization);
+          return value.toString().normalize(normalization) == match.toString().normalize(normalization);
         },
       );
       return;
