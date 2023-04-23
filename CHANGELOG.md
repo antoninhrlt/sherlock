@@ -1,3 +1,5 @@
+- # 0.1.2
+  Introduce flexible regex for smart search.
 - # 0.1.1
   Description updated in the "README.md" file too.
 - # 0.1.0

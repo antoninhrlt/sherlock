@@ -1,6 +1,6 @@
 name: sherlock
 description: Perform efficient and customized searches on local data. Built-in autocomplete feature for search bars.
-version: 0.1.1
+version: 0.1.2
 homepage: https://github.com/antoninhrlt/sherlock
 license: MIT
 
