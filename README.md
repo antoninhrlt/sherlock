@@ -2,7 +2,7 @@
 Perform efficient and customized searches on local data. Built-in autocomplete feature for search bars.
 
 <p align="center">
-    <img src="media/search_bar.gif" style="border-radius: 30px">
+    <img src="https://github.com/antoninhrlt/sherlock/raw/main/media/search_bar.gif" style="border-radius: 30px">
 </p>
 
 <p align="center">

@@ -1,5 +1,8 @@
+- # 0.1.5
+  New widget `SherlockSearchBar` using the new `SearchBar` widget for quick 
+  integration. Update of the example.
 - # 0.1.4
-  Just update the README.md
+  Just update the README.md.
 - # 0.1.3
   Some fixes and example using the new `SearchBar` widget.
 - # 0.1.2
