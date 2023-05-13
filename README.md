@@ -1,6 +1,15 @@
 # sherlock
 Perform efficient and customized searches on local data. Built-in autocomplete feature for search bars.
 
+<p align="center">
+    <img src="media/search_bar.gif" style="border-radius: 30px">
+</p>
+
+<p align="center">
+    Sherlock in the new <b><code>SearchBar</code></b> widget ! (Flutter 3.10.0)<br>
+    Note that the text autocomplete feature is not used.
+</p>
+
 ## Usage
 Sherlock needs the elements in which it (he?) will search. Priorities can be specified for results sorting, but it is not mandatory.
 
