@@ -10,4 +10,4 @@ dev_dependencies:
   test: ^1.21.0
 dependencies:
   duration: ^3.0.12
-  sherlock: ^0.0.15
+  sherlock: ^0.1.1
