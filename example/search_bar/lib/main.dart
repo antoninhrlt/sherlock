@@ -18,6 +18,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'monospace',
       ),
       home: MyHomePage(title: ''),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -75,10 +76,6 @@ class MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
         child: SearchAnchor.bar(
