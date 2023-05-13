@@ -111,6 +111,10 @@ class Sherlock {
     // Normalizes the input string and remove the [stopWords].
     input = input.normalize(normalization).removeStopWords(stopWords);
 
+    if (input.isEmpty) {
+      return;
+    }
+
     // Splits the input into keywords.
     final inputKeywords = input.split(' ');
 

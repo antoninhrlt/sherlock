@@ -5,10 +5,17 @@ extension RemoveStopWords on String {
   ///
   /// Every word of the [stopWords] is removed when found in the string.
   String removeStopWords(List<String> stopWords) {
+    /// Does not remove stopwords in empty strings
+    if (isEmpty) {
+      return this;
+    }
+
     /// Removes the [stopWords] from the string.
     String manipulated = '$this ';
 
-    for (String word in split(' ')) {
+    final splitted = split(' ');
+
+    for (String word in splitted) {
       for (String stopWord in stopWords) {
         if (word.toLowerCase() != stopWord.toLowerCase()) {
           continue;
@@ -16,6 +23,14 @@ extension RemoveStopWords on String {
 
         manipulated = manipulated.replaceAll('$word ', '');
       }
+    }
+
+    if (manipulated.isEmpty) {
+      if (splitted.length == 1) {
+        return this;
+      }
+
+      return '';
     }
 
     // Removes the added space
