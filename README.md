@@ -7,6 +7,7 @@ Perform efficient and customized searches on local data. Built-in autocomplete f
 
 <p align="center">
     Sherlock in the new <b><code>SearchBar</code></b> widget ! (Flutter 3.10.0)<br>
+    See this example <a href="/blob/main/example/search_bar/lib/main.dart">here</a>.
 </p>
 
 ## Usage
