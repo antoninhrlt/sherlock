@@ -1,3 +1,5 @@
+- # 0.1.4
+  Just update the README.md
 - # 0.1.3
   Some fixes and example using the new `SearchBar` widget.
 - # 0.1.2
