@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:sherlock/completion.dart';
 import 'package:sherlock/sherlock.dart';
+import 'package:sherlock/widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,76 +17,58 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
-        fontFamily: 'monospace',
       ),
-      home: MyHomePage(title: ''),
+      home: ExampleView(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({super.key, required this.title});
-
-  final String title;
+class ExampleView extends StatefulWidget {
+  ExampleView({super.key});
 
   final List<Map<String, dynamic>> users = [
     {
-      'firstName': 'Finn',
-      'lastName': 'Thornton',
+      'name': 'Finn Thornton',
       'city': 'Edinburgh',
-      'id': 1, // other types than string can be used.
     },
     {
-      'firstName': 'Suz',
-      'lastName': 'Judy',
+      'name': 'Suz Judy',
       'city': 'Paris',
-      'id': 2,
     },
     {
-      'firstName': 'Suz',
-      'lastName': 'Crystal',
+      'name': 'Suz Crystal',
       'city': 'Edinburgh',
-      'hobbies': ['sport', 'programming'], // string lists can be used.
-      'id': 3,
     },
   ];
 
   @override
-  State<StatefulWidget> createState() => MyHomePageState();
+  State<StatefulWidget> createState() => ExampleState();
 }
 
-class MyHomePageState extends State<MyHomePage> {
-  SearchController controller = SearchController();
-  Sherlock? sherlock;
-  var results = [];
-
-  @override
-  void initState() {
-    super.initState();
-
-    sherlock = Sherlock(elements: widget.users);
-
-    controller.addListener(() {
-      sherlock!.search(where: ['firstName'], input: controller.text);
-      results = sherlock!.results;
-      sherlock!.forget();
-      debugPrint('results for \'${controller.text}\' : $results');
-    });
-  }
+class ExampleState extends State<ExampleView> {
+  List<Map<String, dynamic>> results = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-        child: SearchAnchor.bar(
-          barHintText: 'Search user',
-          isFullScreen: false,
-          searchController: controller,
-          suggestionsBuilder: (context, controller) {
-            return results.map((e) => UserCard(user: e)).toList();
-          },
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: [
+            SherlockSearchBar(
+              sherlock: Sherlock(elements: widget.users),
+              sherlockCompletion: SherlockCompletion(where: 'name', elements: widget.users),
+              onSearch: (input, sherlock) {
+                sherlock.search(input: input);
+
+                setState(() {
+                  results = sherlock.results;
+                });
+              },
+            ),
+            ...results.map((e) => UserCard(user: e)),
+          ],
         ),
       ),
     );
@@ -112,19 +96,9 @@ class UserCard extends StatelessWidget {
               size: 52,
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                user['firstName'],
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                user['lastName'],
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
+          Text(
+            user['name'],
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           const Icon(Icons.location_city),
