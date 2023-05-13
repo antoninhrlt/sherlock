@@ -1,3 +1,5 @@
+- # 0.1.3
+  Some fixes and example using the new `SearchBar` widget.
 - # 0.1.2
   Introduce flexible regex for smart search.
 - # 0.1.1
