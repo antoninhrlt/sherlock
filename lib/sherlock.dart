@@ -116,7 +116,7 @@ class Sherlock {
     }
 
     // Splits the input into keywords.
-    final inputKeywords = input.split(' ');
+    final inputKeywords = input.split(' ')..removeWhere((e) => e.isEmpty);
 
     // Creates an easily-manipulable 'where'.
     var smartWhere = Where(where: where);
@@ -142,13 +142,15 @@ class Sherlock {
             return false;
           }
 
-          // If the distance is 0, [value] and [input] are equal.
-          final distance = levenshtein(
-            a: value.toString().normalize(normalization),
-            b: input,
-          );
+          return value.toString().normalize(normalization) == input;
 
-          return distance <= errorTolerance;
+          // // If the distance is 0, [value] and [input] are equal.
+          // final distance = levenshtein(
+          //   a: value.toString().normalize(normalization),
+          //   b: input,
+          // );
+
+          // return distance <= errorTolerance;
         },
       ),
     );
@@ -163,7 +165,7 @@ class Sherlock {
           }
 
           final normalizedValue = value.toString().normalize(normalization);
-          return input.startsWith(normalizedValue);
+          return normalizedValue.startsWith(input);
         },
       ),
     );
