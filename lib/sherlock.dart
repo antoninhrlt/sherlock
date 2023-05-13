@@ -1,6 +1,5 @@
 library sherlock;
 
-import 'package:sherlock/levenshtein.dart';
 import 'package:sherlock/result.dart';
 import 'package:sherlock/stopwords.dart';
 import 'package:sherlock/types.dart';
