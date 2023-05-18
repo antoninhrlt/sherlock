@@ -21,7 +21,6 @@ class SherlockSearchBar extends StatefulWidget {
   final void Function(String input, Sherlock sherlock)? onSearch;
 
   final SherlockSuggestionsBuilder Function(BuildContext context, List<String> suggestions)? suggestionsBuilder;
-  final bool sherlockForgetAfterSearch;
 
   const SherlockSearchBar({
     super.key,
@@ -40,7 +39,6 @@ class SherlockSearchBar extends StatefulWidget {
     required this.sherlockCompletion,
     this.onSearch,
     this.suggestionsBuilder,
-    this.sherlockForgetAfterSearch = true,
   });
 
   @override
@@ -57,10 +55,6 @@ class _SherlockSearchBarState extends State<SherlockSearchBar> {
     controller.addListener(() {
       if (widget.onSearch != null) {
         widget.onSearch!(controller.text, widget.sherlock);
-      }
-
-      if (widget.sherlockForgetAfterSearch) {
-        widget.sherlock.forget();
       }
     });
   }

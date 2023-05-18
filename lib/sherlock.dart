@@ -1,5 +1,6 @@
 library sherlock;
 
+import 'package:flutter/cupertino.dart' as test;
 import 'package:sherlock/result.dart';
 import 'package:sherlock/stopwords.dart';
 import 'package:sherlock/types.dart';
@@ -11,10 +12,27 @@ bool helloSherlock() {
   return true;
 }
 
-/// The search functions add the found elements in [results]. No function
-/// returns a result.
+/// Creates a local [Sherlock] object and perform queries.
+///
+/// [elements], [priorities], [normalization] are the same parameters as the
+/// [Sherlock] constructor.
+///
+/// [queries] is a callback which has the [Sherlock] object to perform queries
+/// and should return the results since this function aims to return them.
+///
+/// Returns the results of the [Sherlock] object.
+List<Result> sherlock({
+  required List<Element> elements,
+  PriorityMap priorities = const {'*': 1},
+  NormalizationSettings normalization = const NormalizationSettings.defaults(),
+  required List<Result> Function(Sherlock sherlock) queries,
+}) {
+  final sherlock = Sherlock(elements: elements, normalization: normalization, priorities: priorities);
+  return queries(sherlock);
+}
+
 class Sherlock {
-  /// Where to search.
+  /// Where to search. Basically, a map described like a JSON file.
   final List<Element> elements;
 
   /// Column priorities to sort the results.
@@ -26,16 +44,10 @@ class Sherlock {
   /// The current manipulated element. Used in loops by the query functions.
   Element _currentElement = {};
 
-  /// Unsorted research findings, wrapped into a list of [Result].
+  /// Stores the results in this list before returning it in functions.
   ///
-  /// Use [sortResults] to sort them still wrapped, or use the [results] getter
-  /// to sort them unwrapped.
-  List<Result> unsortedResults = [];
-
-  /// Sorted research findings.
-  ///
-  /// Results are unwrapped to a list of [Element].
-  List<Element> get results => sortResults(unsortedResults: unsortedResults).unwrap();
+  /// It can be sorted thanks to [sortResults].
+  List<Result> _currentResults = [];
 
   /// Creates a [Sherlock] instance that will search in [elements] with a given
   /// map of [priorities].
@@ -43,11 +55,12 @@ class Sherlock {
   /// If [priorities] are not specified, the default priority is the only one
   /// specified for the priorities.
   /// But [priorities] can be specified, and with another "default priority".
+  /// > The default priority ('*') is 1.
   ///
-  /// The default priority ('*') is 1.
+  /// If [normalization] is not specified, the defaults settings are used. See
+  /// [NormalizationSettings.defaults] for more.
   ///
-  /// If [normalizeSettings] are not specified, the defaults settings are used.
-  /// See [NormalizeSettings.defaults].
+  /// If [sortResultsBeforeReturning] is not specified, it is true.
   Sherlock({
     required this.elements,
     PriorityMap priorities = const {'*': 1},
@@ -57,23 +70,14 @@ class Sherlock {
           ...priorities
         };
 
-  /// Resets the [results].
-  void forget() {
-    unsortedResults = [];
-  }
-
   /// Smart search in [where], from a *natural* user [input].
   ///
-  /// Searches are performed in the following order, first searches gives the
+  /// Searches are performed in the following order, first researches give the
   /// results with the greatest priorities :
   /// - Being equal
   /// - Starting with
   /// - All keywords in
   /// - At least one keyword in
-  ///
-  /// The specified [normalization] in [Sherlock] instancing is totally ignored.
-  /// The smart search want to be smart and efficient, it uses its own
-  /// [NormalizationSettings].
   ///
   /// If [stopWords] are not specified, English stop-words are used, otherwise
   /// they are a list of words that will be removed of the input. A specific
@@ -81,18 +85,12 @@ class Sherlock {
   /// > See [StopWords].
   ///
   /// If [where] is not specified, it is a global search ('*'), otherwise it is
-  /// the key of the column where to search.
+  /// a list of the keys of the columns where to search.
   ///
-  /// The [errorTolerance] corresponds the accepted Levenshtein distance get
-  /// during searches.
-  /// > See https://en.wikipedia.org/wiki/Levenshtein_distance.
-  ///
-  /// If [errorTolerance] is not specified, it is equal to 2, which basically
-  /// allows small typing errors.
-  void search({
+  /// Returns the research findings of this function.
+  List<Result> search({
     dynamic where = '*',
     required String input,
-    int errorTolerance = 2,
     List<String> stopWords = StopWords.en,
   }) {
     Where(where: where).checkValidity();
@@ -111,7 +109,7 @@ class Sherlock {
     input = input.normalize(normalization).removeStopWords(stopWords);
 
     if (input.isEmpty) {
-      return;
+      return [];
     }
 
     // Splits the input into keywords.
@@ -120,15 +118,17 @@ class Sherlock {
     // Creates an easily-manipulable 'where'.
     var smartWhere = Where(where: where);
 
+    List<Result> results = [];
+
     // Avoid duplicate code.
-    void smartQuery({required void Function(String where) query}) {
+    void smartQuery({required List<Result> Function(String where) query}) {
       if (smartWhere.isGlobal) {
-        query(where);
+        results += query(where);
         return;
       }
 
       for (var column in smartWhere.columns) {
-        query(column);
+        results += query(column);
       }
     }
 
@@ -142,14 +142,6 @@ class Sherlock {
           }
 
           return value.toString().normalize(normalization) == input;
-
-          // // If the distance is 0, [value] and [input] are equal.
-          // final distance = levenshtein(
-          //   a: value.toString().normalize(normalization),
-          //   b: input,
-          // );
-
-          // return distance <= errorTolerance;
         },
       ),
     );
@@ -193,6 +185,8 @@ class Sherlock {
 
     // Restores the [normalization].
     normalization = storedOldNormalization;
+
+    return results;
   }
 
   /// Searches for values matching with the [regex], in [where].
@@ -201,7 +195,9 @@ class Sherlock {
   /// the key of the column where to search.
   ///
   /// Applies the [normalization] or the [specificNormalization] when specified.
-  void query({
+  ///
+  /// Returns the research findings of this function.
+  List<Result> query({
     String where = '*',
     required String regex,
     NormalizationSettings? specificNormalization,
@@ -259,17 +255,21 @@ class Sherlock {
     }
 
     /// Performs the query.
-    _queryAny(where, (columnId, priority) {
+    final results = _queryAny(where, (columnId, priority) {
       addWhenMatch(_currentElement[columnId], priority);
     });
 
     // Restores the [normalization].
     normalization = savedOldNormalization;
+
+    return results;
   }
 
   /// Searches for values when a key exists for [what] in [where].
-  void queryExist({required String where, required String what}) {
-    _queryAny(where, (columnId, priority) {
+  ///
+  /// Returns the research findings of this function.
+  List<Result> queryExist({required String where, required String what}) {
+    return _queryAny(where, (columnId, priority) {
       /// Searches in the specified column.
       /// When [what] does not exist, does nothing.
       var value = _currentElement[columnId];
@@ -287,13 +287,21 @@ class Sherlock {
   ///
   /// If [where] is not specified, it is a global search ('*'), otherwise it is
   /// the key of the column where to search.
-  void queryBool({
+  ///
+  /// Returns the research findings of this function.
+  List<Result> queryBool({
     String where = '*',
     required bool Function(dynamic value) fn,
   }) {
-    _queryAny(where, (columnId, priority) {
+    return _queryAny(where, (columnId, priority) {
+      final colVal = _currentElement[columnId];
+
+      if (colVal == null) {
+        return;
+      }
+
       /// The return value of [fn] is true, it's a match !
-      if (fn(_currentElement[columnId])) {
+      if (fn(colVal)) {
         _addResult(
           priority: priorities[columnId] ?? priorities['*']!,
         );
@@ -307,7 +315,9 @@ class Sherlock {
   /// the key of the column where to search.
   ///
   /// Applies the [normalization] or the [specificNormalization] when specified.
-  void queryMatch({
+  ///
+  /// Returns the research findings of this function.
+  List<Result> queryMatch({
     String where = '*',
     required dynamic match,
     NormalizationSettings? specificNormalization,
@@ -323,7 +333,7 @@ class Sherlock {
     bool stringComparison = match.runtimeType == String;
 
     if (stringComparison) {
-      queryBool(
+      final results = queryBool(
         where: where,
         fn: (value) {
           /// Cannot lowercase a non-string value.
@@ -334,42 +344,28 @@ class Sherlock {
           return value.toString().normalize(normalization) == match.toString().normalize(normalization);
         },
       );
-      return;
+
+      return results;
     }
 
     /// Dynamic comparison.
-    queryBool(where: where, fn: (value) => value == match);
+    final results = queryBool(where: where, fn: (value) => value == match);
 
     // Restores the [normalization].
     normalization = savedOldNormalization;
+
+    return results;
   }
 
-  /// Adds the [_currentElement] wrapped into a [Result] object, into the
-  /// [results].
-  void _addResult({required int priority}) {
-    /// Avoid duplicates
-    for (Result e in unsortedResults) {
-      if (e.element == _currentElement) {
-        return;
-      }
-    }
-
-    // Adds the [_currentElement] to the results, with its [priority].
-    unsortedResults.add(
-      Result(
-        element: _currentElement,
-        priority: priority,
-      ),
-    );
-  }
-
-  /// Browses the [elements] to perform a search, calls [fn] giving the column
+  /// Browses the [elements] to perform a research, calls [fn] giving the column
   /// id where the search has to be performed in, and the priority of this
   /// column.
   ///
   /// The callback [fn] can do anything, but it is designed to [_addResult]
   /// with the matching values.
-  void _queryAny(
+  ///
+  /// Returns the research findings of this function.
+  List<Result> _queryAny(
     String where,
     void Function(String columnId, int priority) fn,
   ) {
@@ -393,5 +389,37 @@ class Sherlock {
         );
       }
     }
+
+    return _results();
+  }
+
+  /// Adds the [_currentElement] wrapped into a [Result] object, into the
+  /// [_currentResults].
+  ///
+  /// Don't add duplicates.
+  void _addResult({required int priority}) {
+    final result = Result(
+      element: _currentElement,
+      priority: priority,
+    );
+
+    // Avoid duplicates
+    for (var element in _currentResults.map((result) => result.element)) {
+      if (element == _currentElement) {
+        return;
+      }
+    }
+
+    _currentResults.add(result);
+  }
+
+  /// Function to call at the end of a query in order the return the results.
+  List<Result> _results() {
+    // Stores the results to return them.
+    List<Result> results = List.from(_currentResults);
+    // Resets the list to use it again in other calls.
+    _currentResults = [];
+
+    return results;
   }
 }

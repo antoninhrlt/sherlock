@@ -1,16 +1,23 @@
 import 'package:sherlock/types.dart';
 
+/// Contains the element which is the research finding and its priority in order
+/// to sort it later.
 class Result {
+  /// The research finding.
   Element element;
+
+  /// The priority of the result for sorting.
   int priority;
 
+  /// Creates a [Result] from an element and its priority.
   Result({required this.element, required this.priority});
 }
 
-/// Sorts a list of [unsortedResults].
-List<Result> sortResults({required List<Result> unsortedResults}) {
+extension SortResults on List<Result> {
   /// Gets the results sorted by their priority.
-  return unsortedResults..sort((a, b) => -a.priority.compareTo(b.priority));
+  ///
+  /// Should not be confounded with the [List.sort] function !
+  List<Result> sorted() => this..sort((a, b) => -a.priority.compareTo(b.priority));
 }
 
 extension UnwrapResults on List<Result> {

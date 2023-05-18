@@ -31,11 +31,16 @@ class SherlockCompletion {
   /// ```
   String where;
 
-  /// Results found by [Sherlock] in [input].
-  List<Element> results = [];
+  List<Element> _results = [];
 
-  SherlockCompletion({required this.where, required elements})
-      : sherlock = Sherlock(elements: elements);
+  /// Results found by [Sherlock] in the last [input] call.
+  List<Element> get results {
+    final List<Element> results = List.from(_results);
+    _results = [];
+    return results;
+  }
+
+  SherlockCompletion({required this.where, required elements}) : sherlock = Sherlock(elements: elements);
 
   /// Gets values which could be the completion of [input]. These values are the
   /// columns [where] of the matching [elements]. The [Sherlock]'s [results] can
@@ -61,8 +66,11 @@ class SherlockCompletion {
       return [];
     }
 
+    // Stores the results of each query function called.
+    List<Result> allResults = [];
+
     // Checks for strings starting with [input].
-    sherlock.queryBool(
+    allResults += sherlock.queryBool(
       where: where,
       fn: (value) {
         // Only matches with strings.
@@ -81,9 +89,9 @@ class SherlockCompletion {
 
     // Performs further searches to get at least minimum number of results
     // wanted.
-    if (minResults != -1 && minResults > sherlock.unsortedResults.length) {
+    if (minResults != -1 && minResults > allResults.length) {
       // Searches for keyword starting with the [input].
-      sherlock.queryBool(
+      allResults += sherlock.queryBool(
         where: where,
         fn: (value) {
           // Only matches with strings.
@@ -113,7 +121,7 @@ class SherlockCompletion {
       );
 
       // Searches [input] in strings.
-      sherlock.queryBool(
+      allResults += sherlock.queryBool(
         where: where,
         fn: (value) {
           // Only matches with strings.
@@ -133,18 +141,15 @@ class SherlockCompletion {
       );
     }
 
-    // Saves the [Sherlock] results, unwrapped
-    results = sherlock.unsortedResults.unwrap();
+    // Gets the results as they actually are and sorted.
+    _results = allResults.sorted().unwrap();
 
     // Does not return the elements but the fields [where].
     var stringResults = results.map((e) => e[where].toString()).toList();
 
-    // Destroys the [Sherlock] results.
-    sherlock.forget();
-
     // Returns only [maxResults] results.
     if (maxResults != -1 && maxResults < results.length) {
-      results = results.getRange(0, maxResults).toList();
+      _results = results.getRange(0, maxResults).toList();
       return stringResults.getRange(0, maxResults).toList();
     }
 
