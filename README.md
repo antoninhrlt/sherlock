@@ -31,20 +31,60 @@ final priorities = {
 };
 
 final sherlock = Sherlock(elements: foo, priorities: priorities);
-sherlock.query(where: '<column>', regex: r'<regex expression>');
 
-List<Map> results = sherlock.results;
-sherlock.forget(); // clear the results
-
-// Other queries...
+var results = sherlock
+    .query(where: '<column>', regex: r'<regex expression>')
+    .sorted()
+    .unwrap();
 ```
 
-> Note : this package is designed for searches in local data retrieved after an API call or something. It avoids requiring Internet during the search.
+> Note : this package is designed for researches on local data retrieved after an API call or something. It avoids requiring Internet during the search.
 
 See the [examples](example/README.md).
 
 ## Overview
 See also the [search completion tool](#search-completion-tool).
+
+- ### Quick Sherlock
+  Use to execute any task with a volatile `Sherlock` instance. The function parameters are constructed like the `Sherlock` constructor plus a callback in which tasks are executed.
+
+  Prototype
+  ```dart
+  List<Element> sherlock(
+    List<Element> elements,
+    PriorityMap priorities = const {'*': 1},
+    NormalizationSettings normalization = /* default */,
+    void Function(Sherlock sherlock) queries,
+  })
+  ```
+  Usage
+  ```dart
+  final users = [
+    {
+      'firstName': 'Finn',
+      'lastName': 'Thornton',
+      'city': 'Edinburgh',
+      'id': 1,
+    },
+    {
+      'firstName': 'Suz',
+      'lastName': 'Judy',
+      'city': 'Paris',
+      'id': 2,
+    },
+    {
+      'firstName': 'Suz',
+      'lastName': 'Crystal',
+      'city': 'Edinburgh',
+      'id': 3,
+    },
+  ];
+
+  final foundUsers = sherlock(elements: users, (sherlock) {
+    sherlock.queryMatch(where: 'firstName', 'Finn');
+    sherlock.queryMatch(where: 'city', 'Edinburgh');
+  });
+  ```
 
 - ### Create a `Sherlock` instance.
   Prototype
@@ -152,26 +192,23 @@ See also the [search completion tool](#search-completion-tool).
   ```
 
 - ### Results
-  Performed queries add the matching elements to the field `unsortedResults`, which can be used to get the results as `Result` objects.
+  Every query function returns its research findings. These results are returned as `List<Result>` and can be sorted thanks to the extension function `SortResults.sorted`, then unwrap thanks to the other extension function `UnwrapResults.unwrap` which returns a `List<Map>`.
 
-  After that, the results can be retrieved sorted and unwrapped.
+  Import
+  ```dart
+  import 'package:sherlock/result.dart';
+  ```
 
   Prototypes
-  ```dart
-  List<Map<String, dynamic>> get results; // sorted results
-  List<Result> unsortedResults;
-
-  void forget(); // resets the results
-  ```
-  ```dart
-  /// Out of the [Sherlock] class.
-  
+  ```dart  
   class Result {
     Map<String, dynamic> element;
     int priority;
   }
 
-  List<Result> sortResults(List<Result> unsortedResults);
+  extension SortResults on List<Result> {
+    List<Result> sorted();
+  }
 
   extension UnwrapResults on List<Result> {
     List<Map<String, dynamic>> unwrap();
@@ -180,39 +217,40 @@ See also the [search completion tool](#search-completion-tool).
 
   Usages
   
-  Results sorted following the `priorities` map.
+  Results are sorted following the `priorities` map.
   ```dart
   final sherlock = Sherlock(/*...*/);
-  // Queries...
-  final results = sherlock.results;
+  List<Result> results = sherlock./* query */.sorted();
   ```
-  Getting results unsorted means the results will be in the order they were found. Each `Result` contain the actual result (an element matching with the query) and its priority.
+
+  Unwrapping results means getting just the `element` object from the `Result` object.
   ```dart
   final sherlock = Sherlock(/*...*/);
-  // Queries...
-  final results = sherlock.unsortedResults;
+  List<Result> results = sherlock./* query */.sorted();
+  List<Map> foundElements = results.unwrap();
   ```
-  Also, the results can be sorted later :
-  ```dart
-  final unsortedResults = sherlock.unsortedResults;
-  final results = sortResults(unsortedResults);
-  ```
-  But also unwrapped, in order to get elements instead of `Result` objects.
-    ```dart
-  final results = sortResults(unsortedResults).unwrap();
-  ```
-  Reset the values to perform new unrelated queries.
+
+  Getting results unsorted means the results will be in the order they were found.
   ```dart
   final sherlock = Sherlock(/*...*/);
-  // Queries...
-  final results = sherlock.results; // save the results.
-  sherlock.forget(); // `sherlock.results == []`.
-  // Queries...
+  List<Result> results = sherlock./* query */;
+  ```
+  Also, the results can be sorted at the end after all queries are done :
+  ```dart
+  final sherlock = Sherlock(/*...*/);
+
+  List<Result> allResults [];
+  allResults += sherlock./* query */;
+  allResults += sherlock./* query */;
+
+  allResults = allResults.sorted();
   ```
 - ### Queries
+  Every query returns its research findings (results) but they are not sorted. Click [here](#results) to learn how to manage them.
+
   Prototypes
   ```dart
-  void query(
+  List<Result> query(
     String where = '*', 
     String regex, 
     NormalizationSettings specificNormalization = /* this.normalization */,
@@ -225,7 +263,7 @@ See also the [search completion tool](#search-completion-tool).
 
   /// All elements with in at least one of their fields which contain the word 
   /// 'cat'.
-  sherlock.query(regex: r'cat');
+  final catsResults = sherlock.query(regex: r'cat');
 
   /// All elements having a title, which is equal to 'movie theatre'.
   sherlock.query(where: 'title', regex: r'^Movie Theatre$');
@@ -247,7 +285,7 @@ See also the [search completion tool](#search-completion-tool).
   Prototype
   ```dart
   /// Searches for elements where [what] exists (is not null) in the column [where].
-  void queryExist(String where, String what)
+  List<Result> queryExist(String where, String what)
   ```
   Usage
   ```dart
@@ -256,9 +294,9 @@ See also the [search completion tool](#search-completion-tool).
   ```
   Prototypes
   ```dart
-  void queryBool(String where = '*', bool Function(dynamic value) fn)
+  List<Result> queryBool(String where = '*', bool Function(dynamic value) fn)
 
-  void queryMatch(
+  List<Result> queryMatch(
     String where = '*', 
     dynamic match,
     NormalizationSettings specificNormalization = /* this.normalization */,
@@ -299,20 +337,17 @@ See also the [search completion tool](#search-completion-tool).
   ```
 
 - ### Smart search
-
   Prototype
   ```dart
-  void search(
+  List<Result> search(
     dynamic where = '*', 
     String input,     
-    int errorTolerance = 2,
     List<String> stopWords = StopWords.en,
   )
   ```
-
   Usages
-  
-  Perfect matches are searched first, it means they will be on top of the `results` if they exist.
+
+  Perfect matches are searched first, it means they will be on top of the results if they exist.
   ```dart
   /// All elements having at least one of their field containing the word 'cats'
   sherlock.search(input: 'cAtS');
@@ -411,7 +446,7 @@ The results could be used in a search widget for example.
 - ### Results
   Prototypes
   ```dart
-  /// [Sherlock] results.
+  /// [Sherlock] results of the last [input] call.
   List<Map<String, dynamic>> results;
 
   /// [input] results.
