@@ -1,3 +1,7 @@
+- # 0.1.6
+  //BREAKING CHANGES//
+  Results are now returned by each function, and not stored by the `Sherlock` 
+  object. See the README.md for new usages.
 - # 0.1.5
   New widget `SherlockSearchBar` using the new `SearchBar` widget for quick 
   integration. Update of the example.
