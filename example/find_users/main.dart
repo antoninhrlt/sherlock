@@ -1,3 +1,4 @@
+import 'package:sherlock/result.dart';
 import 'package:sherlock/sherlock.dart';
 
 void main() {
@@ -23,5 +24,5 @@ void main() {
   ];
 
   final sherlock = Sherlock(elements: users);
-  sherlock.queryMatch(where: 'firstName', match: 'Suz');
+  final foundUsers = sherlock.queryMatch(where: 'firstName', match: 'Suz').sorted().unwrap();
 }

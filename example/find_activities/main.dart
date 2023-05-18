@@ -1,3 +1,4 @@
+import 'package:sherlock/result.dart';
 import 'package:sherlock/sherlock.dart';
 
 void main() {
@@ -19,5 +20,5 @@ void main() {
   ];
 
   final sherlock = Sherlock(elements: activities);
-  sherlock.query(where: '*', regex: r'sport');
+  final foundActivities = sherlock.query(where: '*', regex: r'sport').sorted().unwrap();
 }

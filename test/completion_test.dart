@@ -33,13 +33,11 @@ void main() {
   test('completion', () {
     List<String> results = completion.input(input: 'Fr');
     debugPrint(results.toString());
-    debugPrint(completion.results.toString());
 
     debugPrint('---');
 
     results = completion.input(input: 'Fr', minResults: 4);
     debugPrint(results.toString());
-    debugPrint(completion.results.toString());
   });
 
   test('unchangedRanges', () {

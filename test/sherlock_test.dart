@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sherlock/normalize.dart';
+import 'package:sherlock/result.dart';
 import 'package:sherlock/sherlock.dart';
 
 final activities = [
@@ -63,91 +64,68 @@ void main() {
 
   test('query', () {
     /// All activities where their title is the string 'Extreme VR'.
-    sherlock.query(where: 'title', regex: r'^Extreme VR$');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results1 = sherlock.query(where: 'title', regex: r'^Extreme VR$').sorted().unwrap();
+    debugPrint(results1.toString());
 
     /// All activities where their title contains the word 'vr'.
-    sherlock.query(where: 'title', regex: r'vr');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results2 = sherlock.query(where: 'title', regex: r'vr').sorted().unwrap();
+    debugPrint(results2.toString());
 
     /// All activities where their title contains the word 'live' or 'vr'.
-    sherlock.query(where: 'title', regex: r'(live|vr)');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results3 = sherlock.query(where: 'title', regex: r'(live|vr)').sorted().unwrap();
+    debugPrint(results3.toString());
 
     /// All activities where their description contains the word 'live'.
-    sherlock.query(where: 'description', regex: r'(live)');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results4 = sherlock.query(where: 'description', regex: r'(live)').sorted().unwrap();
+    debugPrint(results4.toString());
 
     /// All activities where their description or title contains the word 'cat'.
-    sherlock.query(where: 'title', regex: r'cat');
-    sherlock.query(where: 'description', regex: r'cat');
+    List<Result> results5 = sherlock.query(where: 'title', regex: r'cat');
+    results5 += sherlock.query(where: 'description', regex: r'cat');
 
-    debugPrint(sherlock.results.toString());
+    final results5_2 = results5.sorted().unwrap();
 
-    sherlock.forget();
+    debugPrint(results5_2.toString());
 
     /// All activities where at least one column's value contains the word 'vr'.
-    sherlock.query(where: '*', regex: r'vr');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results6 = sherlock.query(where: '*', regex: r'vr').sorted().unwrap();
+    debugPrint(results6.toString());
 
     /// Invalid query
-    sherlock.query(where: 'id', regex: r'foo');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results7 = sherlock.query(where: 'id', regex: r'foo').sorted().unwrap();
+    debugPrint(results7.toString());
 
     /// All elements with both words 'live' and 'stream' in their descriptions.
-    sherlock.query(where: 'description', regex: r'(?=.*live)(?=.*stream).*');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results8 = sherlock.query(where: 'description', regex: r'(?=.*live)(?=.*stream).*').sorted().unwrap();
+    debugPrint(results8.toString());
   });
 
   test('queryExist', () {
     /// All activities where are monday is specified in the opening hours.
-    sherlock.queryExist(where: 'openingHours', what: 'monday');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results = sherlock.queryExist(where: 'openingHours', what: 'monday').sorted().unwrap();
+    debugPrint(results.toString());
   });
 
   test('queryBool', () {
     /// All activities having a title which does not correspond to 'Parc'.
-    sherlock.queryBool(where: 'title', fn: (value) => value != 'Parc');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results1 = sherlock.queryBool(where: 'title', fn: (value) => value != 'Parc').sorted().unwrap();
+    debugPrint(results1.toString());
 
     /// All activities having at least one column's value corresponding to
     /// 'VR immersion'.
-    sherlock.queryBool(where: '*', fn: (value) => value == 'VR immersion');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
-
-    /// All activities having a title which correspond to 'Extreme VR'.
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results2 = sherlock.queryBool(where: '*', fn: (value) => value == 'VR immersion').sorted().unwrap();
+    debugPrint(results2.toString());
 
     /// All activities starting at 7'o on tuesday.
-    sherlock.queryBool(
-      where: 'openingHours',
-      fn: (value) => value['tuesday'][0] == 7,
-    );
-    debugPrint(sherlock.results.toString());
+    final results3 = sherlock
+        .queryBool(
+          where: 'openingHours',
+          fn: (value) => value['tuesday'][0] == 7,
+        )
+        .sorted()
+        .unwrap();
 
-    sherlock.forget();
+    debugPrint(results3.toString());
   });
 
   test('queryMatch', () {
@@ -157,28 +135,22 @@ void main() {
     );
 
     /// All activities having a title corresponding to 'Parc'.
-    sherlock.queryMatch(where: 'title', match: 'Parc');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results1 = sherlock.queryMatch(where: 'title', match: 'Parc').sorted().unwrap();
+    debugPrint(results1.toString());
 
     sherlock.normalization.caseSensitivity = false;
 
     /// All activities having a title corresponding to 'parc', no matter
     /// the case.
-    sherlock.queryMatch(where: 'title', match: 'pArC');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results2 = sherlock.queryMatch(where: 'title', match: 'pArC').sorted().unwrap();
+    debugPrint(results2.toString());
 
     sherlock.normalization.caseSensitivity = true;
 
     /// All activities having at least one column's value corresponding to
     /// 'VR immersion'.
-    sherlock.queryMatch(where: '*', match: 'VR immersion');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results3 = sherlock.queryMatch(where: '*', match: 'VR immersion').sorted().unwrap();
+    debugPrint(results3.toString());
   });
 
   test('where', () {

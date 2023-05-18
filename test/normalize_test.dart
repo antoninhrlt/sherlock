@@ -43,10 +43,8 @@ void main() {
       ),
     );
 
-    sherlock.query(where: 'name', regex: r'^Something with a weird name$');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results = sherlock.query(where: 'name', regex: r'^Something with a weird name$');
+    debugPrint(results.toString());
   });
 
   test('normalizeDiacritics', () {
@@ -59,10 +57,8 @@ void main() {
       ),
     );
 
-    sherlock.query(where: 'name', regex: r'^Something with a weird name$');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results = sherlock.query(where: 'name', regex: r'^Something with a weird name$');
+    debugPrint(results.toString());
   });
 
   test('normalizeCaseType', () {
@@ -75,13 +71,11 @@ void main() {
       ),
     );
 
-    sherlock.query(where: 'name', regex: r'^something camel case$');
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+    final results1 = sherlock.query(where: 'name', regex: r'^something camel case$');
+    debugPrint(results1.toString());
 
-    sherlock.query(where: 'name', regex: r'^something snake case$');
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+    final results2 = sherlock.query(where: 'name', regex: r'^something snake case$');
+    debugPrint(results2.toString());
   });
 
   test('normalizeCase', () {
@@ -94,15 +88,12 @@ void main() {
       ),
     );
 
-    sherlock.query(where: 'name', regex: r'^something NOT UPPER case$');
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+    final results1 = sherlock.query(where: 'name', regex: r'^something NOT UPPER case$');
+    debugPrint(results1.toString());
 
     sherlock.normalization.caseSensitivity = true;
-    sherlock.query(where: 'name', regex: r'^something NOT UPPER case$');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    final results2 = sherlock.query(where: 'name', regex: r'^something NOT UPPER case$');
+    debugPrint(results2.toString());
   });
 
   test('normalizeAll', () {
@@ -115,9 +106,8 @@ void main() {
       ),
     );
 
-    sherlock.query(where: 'name', regex: r'^weirder than the weird$');
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+    final results = sherlock.query(where: 'name', regex: r'^weirder than the weird$');
+    debugPrint(results.toString());
   });
 
   test('specificNormalize', () {
@@ -130,18 +120,17 @@ void main() {
       ),
     );
 
-    sherlock.query(where: 'name', regex: r'^something with a weird name$');
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+    final results1 = sherlock.query(where: 'name', regex: r'^something with a weird name$');
+    debugPrint(results1.toString());
 
-    sherlock.query(
+    final results2 = sherlock.query(
       where: 'name',
       regex: r'^something with a weird name$',
       specificNormalization: NormalizationSettings(
         removeDiacritics: false,
       ),
     );
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+
+    debugPrint(results2.toString());
   });
 }

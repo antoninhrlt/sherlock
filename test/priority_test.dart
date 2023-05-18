@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sherlock/result.dart';
 import 'package:sherlock/types.dart';
 import 'package:sherlock/sherlock.dart';
 
@@ -32,9 +33,9 @@ void main() {
     };
 
     var sherlock = Sherlock(elements: activities, priorities: columnPriorities);
-    sherlock.search(where: '*', input: 'sport');
+    final results = sherlock.search(where: '*', input: 'sport').unwrap();
 
-    debugPrint(sherlock.results.toString());
+    debugPrint(results.toString());
   });
 
   test('priority2', () {
@@ -45,8 +46,8 @@ void main() {
     };
 
     var sherlock = Sherlock(elements: activities, priorities: columnPriorities);
-    sherlock.search(where: '*', input: 'sport');
+    final results = sherlock.search(where: '*', input: 'sport').unwrap();
 
-    debugPrint(sherlock.results.toString());
+    debugPrint(results.toString());
   });
 }

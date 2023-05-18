@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sherlock/result.dart';
 import 'package:sherlock/sherlock.dart';
 
 import 'sherlock_test.dart';
@@ -8,30 +9,20 @@ void main() {
   test('smartSearch', () {
     var sherlock = Sherlock(elements: activities);
 
-    sherlock.search(where: '*', input: 'cAtS');
-    debugPrint(sherlock.results.toString());
+    var results = sherlock.search(where: '*', input: 'cAtS');
+    debugPrint(results.sorted().unwrap().toString());
 
-    sherlock.forget();
+    results = sherlock.search(where: '*', input: 'live online');
+    debugPrint(results.sorted().unwrap().toString());
 
-    sherlock.search(where: '*', input: 'live online');
-    debugPrint(sherlock.results.toString());
+    results = sherlock.search(where: ['title'], input: 'live online');
+    debugPrint(results.sorted().unwrap().toString());
 
-    sherlock.forget();
+    results = sherlock.search(where: '*', input: 'extreme Vr');
+    debugPrint(results.sorted().unwrap().toString());
 
-    sherlock.search(where: ['title'], input: 'live online');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
-
-    sherlock.search(where: '*', input: 'extreme Vr');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
-
-    sherlock.search(where: ['title', 'categories'], input: 'cats');
-    debugPrint(sherlock.results.toString());
-
-    sherlock.forget();
+    results = sherlock.search(where: ['title', 'categories'], input: 'cats');
+    debugPrint(results.sorted().unwrap().toString());
   });
 
   final activities2 = [
@@ -48,25 +39,21 @@ void main() {
 
   test('smartSearch2', () {
     var sherlock = Sherlock(elements: activities2);
-    sherlock.search(where: ['title'], input: 'fun surfing');
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
 
-    sherlock.search(where: ['title'], input: 'fun sarfing');
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+    var results = sherlock.search(where: ['title'], input: 'fun surfing');
+    debugPrint(results.sorted().unwrap().toString());
 
-    sherlock.search(where: ['title'], input: 'fun zarfing');
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+    results = sherlock.search(where: ['title'], input: 'fun sarfing');
+    debugPrint(results.sorted().unwrap().toString());
 
-    sherlock.search(where: ['title'], input: 'fon zarfing');
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+    results = sherlock.search(where: ['title'], input: 'fun zarfing');
+    debugPrint(results.sorted().unwrap().toString());
 
-    sherlock.search(where: ['title'], input: 'zarfing');
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+    results = sherlock.search(where: ['title'], input: 'fon zarfing');
+    debugPrint(results.sorted().unwrap().toString());
+
+    results = sherlock.search(where: ['title'], input: 'zarfing');
+    debugPrint(results.sorted().unwrap().toString());
   });
 
   final activities3 = [
@@ -92,9 +79,7 @@ void main() {
 
   test('stopWords', () {
     var sherlock = Sherlock(elements: activities3);
-    sherlock.search(where: ['title'], input: 'with the friends the');
-
-    debugPrint(sherlock.results.toString());
-    sherlock.forget();
+    var results = sherlock.search(where: ['title'], input: 'with the friends the');
+    debugPrint(results.sorted().unwrap().toString());
   });
 }

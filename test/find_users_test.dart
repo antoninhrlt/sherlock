@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sherlock/result.dart';
 import 'package:sherlock/sherlock.dart';
 
 void main() {
@@ -26,7 +27,7 @@ void main() {
 
   test('findUsers', () {
     final sherlock = Sherlock(elements: users);
-    sherlock.search(where: ['firstName'], input: 'f');
-    debugPrint('results: ${sherlock.results}');
+    final results = sherlock.search(where: ['firstName'], input: 'f').sorted().unwrap();
+    debugPrint('results: $results');
   });
 }

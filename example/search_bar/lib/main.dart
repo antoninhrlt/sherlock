@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sherlock/completion.dart';
+import 'package:sherlock/result.dart';
 import 'package:sherlock/sherlock.dart';
 import 'package:sherlock/widget.dart';
 
@@ -60,10 +61,8 @@ class ExampleState extends State<ExampleView> {
               sherlock: Sherlock(elements: widget.users),
               sherlockCompletion: SherlockCompletion(where: 'name', elements: widget.users),
               onSearch: (input, sherlock) {
-                sherlock.search(input: input);
-
                 setState(() {
-                  results = sherlock.results;
+                  results = sherlock.search(input: input).sorted().unwrap();
                 });
               },
             ),
