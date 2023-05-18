@@ -81,8 +81,9 @@ See also the [search completion tool](#search-completion-tool).
   ];
 
   final foundUsers = sherlock(elements: users, (sherlock) {
-    sherlock.queryMatch(where: 'firstName', 'Finn');
-    sherlock.queryMatch(where: 'city', 'Edinburgh');
+    List<Result> allResults = sherlock.queryMatch(where: 'firstName', 'Finn');
+    allResults += sherlock.queryMatch(where: 'city', 'Edinburgh');
+    return allResults;
   });
   ```
 
