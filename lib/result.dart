@@ -24,3 +24,23 @@ extension UnwrapResults on List<Result> {
   /// Unwraps a list of [Result] to a list of [Element].
   List<Element> unwrap() => map((e) => e.element).toList();
 }
+
+extension RemoveDuplicates on List<Result> {
+  /// Removes all the duplicated results in order to keep only one unique result
+  /// by element.
+  List<Result> removeDuplicates() {
+    List<Result> newResults = [];
+
+    for (Result result in this) {
+      for (Element e in newResults.map((e) => e.element)) {
+        if (e == result.element) {
+          break;
+        }
+      }
+
+      newResults.add(result);
+    }
+
+    return newResults;
+  }
+}
