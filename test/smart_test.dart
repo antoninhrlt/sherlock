@@ -6,6 +6,13 @@ import 'package:sherlock/sherlock.dart';
 import 'sherlock_test.dart';
 
 void main() {
+  test('uniqueSmartSearch', () {
+    var sherlock = Sherlock(elements: activities);
+
+    var results = sherlock.search(where: '*', input: 'cAtS');
+    debugPrint(results.sorted().unwrap().toString());
+  });
+
   test('smartSearch', () {
     var sherlock = Sherlock(elements: activities);
 
