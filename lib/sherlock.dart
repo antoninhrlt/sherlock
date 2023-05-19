@@ -48,6 +48,9 @@ class Sherlock {
   /// It can be sorted thanks to [sortResults].
   List<Result> _currentResults = [];
 
+  /// Whether the results must be reset in the next [_results] call.
+  bool _resetResults = true;
+
   /// Creates a [Sherlock] instance that will search in [elements] with a given
   /// map of [priorities].
   ///
@@ -117,17 +120,17 @@ class Sherlock {
     // Creates an easily-manipulable 'where'.
     var smartWhere = Where(where: where);
 
-    List<Result> results = [];
+    _resetResults = false;
 
     // Avoid duplicate code.
     void smartQuery({required List<Result> Function(String where) query}) {
       if (smartWhere.isGlobal) {
-        results += query(where);
+        query(where);
         return;
       }
 
       for (var column in smartWhere.columns) {
-        results += query(column);
+        query(column);
       }
     }
 
@@ -185,7 +188,10 @@ class Sherlock {
     // Restores the [normalization].
     normalization = storedOldNormalization;
 
-    return results;
+    // Resets the current results.
+    _resetResults = true;
+
+    return _results();
   }
 
   /// Searches for values matching with the [regex], in [where].
@@ -416,8 +422,11 @@ class Sherlock {
   List<Result> _results() {
     // Stores the results to return them.
     List<Result> results = List.from(_currentResults);
-    // Resets the list to use it again in other calls.
-    _currentResults = [];
+
+    if (_resetResults) {
+      // Resets the list to use it again in other calls.
+      _currentResults = [];
+    }
 
     return results;
   }
