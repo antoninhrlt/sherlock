@@ -1,3 +1,5 @@
+- # 0.1.7
+  Fix duplicates bug, issue #6
 - # 0.1.6
   //BREAKING CHANGES//
   Results are now returned by each function, and not stored by the `Sherlock` 
