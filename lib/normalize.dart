@@ -22,11 +22,7 @@ class NormalizationSettings {
     bool? normalizeCase,
     bool? normalizeCaseType,
     bool? removeDiacritics,
-  }) : settings = {
-          'case': normalizeCase,
-          'caseType': normalizeCaseType,
-          'diacritics': removeDiacritics
-        };
+  }) : settings = {'case': normalizeCase, 'caseType': normalizeCaseType, 'diacritics': removeDiacritics};
 
   /// The defaults settings for normalizing.
   /// ```dart
@@ -71,6 +67,14 @@ class NormalizationSettings {
           'case': false,
           'caseType': false,
           'diacritics': false,
+        };
+
+  /// Creates a new [NormalizationSettings] object same as [object].
+  NormalizationSettings.from(NormalizationSettings object)
+      : settings = {
+          'case': object['case'],
+          'caseType': object['caseType'],
+          'diacritics': object['diacritics'],
         };
 
   /// Changes the case sensitivity.
@@ -174,8 +178,7 @@ extension Normalize on String {
       // ...fooBar...
       //       ^
       // Camel case found !
-      normalized =
-          normalized.replaceRange(i, i + 1, ' ${normalized[i].toLowerCase()}');
+      normalized = normalized.replaceRange(i, i + 1, ' ${normalized[i].toLowerCase()}');
       // ...foo bar...
       // Result !
     }

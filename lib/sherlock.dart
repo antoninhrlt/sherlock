@@ -1,68 +1,51 @@
 library sherlock;
 
+import 'package:sherlock/normalize.dart';
+import 'package:sherlock/regex.dart';
 import 'package:sherlock/result.dart';
 import 'package:sherlock/stopwords.dart';
 import 'package:sherlock/types.dart';
-import 'package:sherlock/regex.dart';
-import 'package:sherlock/normalize.dart';
 
-/// Returns `true`. Can be used to test if "sherlock" is correctly installed.
-bool helloSherlock() {
-  return true;
-}
-
-/// Creates a local [Sherlock] object and perform queries.
+/// Efficient and customizable search engine for local data.
 ///
-/// [elements], [priorities], [normalization] are the same parameters as the
-/// [Sherlock] constructor.
-///
-/// [queries] is a callback which has the [Sherlock] object to perform queries
-/// and should return the results since this function aims to return them.
-///
-/// Returns the results of the [Sherlock] object.
-List<Result> sherlock({
-  required List<Element> elements,
-  PriorityMap priorities = const {'*': 1},
-  NormalizationSettings normalization = const NormalizationSettings.defaults(),
-  required List<Result> Function(Sherlock sherlock) queries,
-}) {
-  final sherlock = Sherlock(elements: elements, normalization: normalization, priorities: priorities);
-  return queries(sherlock);
-}
-
+/// ## More
+/// Usage information on the README.md
 class Sherlock {
-  /// Where to search. Basically, a map described like a JSON file.
+  /// The local data organised in a list of maps. It's where researches are done.
+  ///
+  /// ## Example
+  /// ```json
+  /// [
+  ///   {
+  ///     'name': 'Jiji',
+  ///     'description': 'Cute cat'
+  ///     'from': 'Kiki's delivery service',
+  ///     'by': 'Studio Ghibli'
+  ///   },
+  ///   {
+  ///     'name': 'Wall-E',
+  ///     'description': 'Beep boop!',
+  ///     'by': ['Disney', 'Pixar']
+  ///   }
+  /// ]
+  /// ```
   final List<Element> elements;
 
-  /// Column priorities to sort the results.
+  /// Map (column identifier as the key, priority number as the value) defining the importance of each column in the
+  /// results.
+  ///
+  /// The bigger it is, the more important it is in results.
+  ///
+  /// Initially set to "all the columns have an importance of 1". The default value for a column is 1 if the key '*' is
+  /// not defined.
   PriorityMap priorities;
 
-  /// Settings for strings normalization.
+  /// See [NormalizationSettings]'s documentation.
+  ///
+  /// Initially set to the default settings given by [NormalizationSettings.defaults].
   NormalizationSettings normalization;
 
-  /// The current manipulated element. Used in loops by the query functions.
-  Element _currentElement = {};
-
-  /// Stores the results in this list before returning it in functions.
-  ///
-  /// It can be sorted thanks to [sortResults].
-  List<Result> _currentResults = [];
-
-  /// Whether the results must be reset in the next [_results] call.
-  bool _resetResults = true;
-
-  /// Creates a [Sherlock] instance that will search in [elements] with a given
-  /// map of [priorities].
-  ///
-  /// If [priorities] are not specified, the default priority is the only one
-  /// specified for the priorities.
-  /// But [priorities] can be specified, and with another "default priority".
-  /// > The default priority ('*') is 1.
-  ///
-  /// If [normalization] is not specified, the defaults settings are used. See
-  /// [NormalizationSettings.defaults] for more.
-  ///
-  /// If [sortResultsBeforeReturning] is not specified, it is true.
+  /// Creates a new [Sherlock] object to search in [elements].
   Sherlock({
     required this.elements,
     PriorityMap priorities = const {'*': 1},
@@ -72,362 +55,446 @@ class Sherlock {
           ...priorities
         };
 
-  /// Smart search in [where], from a *natural* user [input].
+  /// Creates a unique [Sherlock] object which cannot be used outside this function and perform queries.
   ///
-  /// Searches are performed in the following order, first researches give the
-  /// results with the greatest priorities :
-  /// - Being equal
-  /// - Starting with
-  /// - All keywords in
-  /// - At least one keyword in
+  /// The parameters are organised and defined like the [Sherlock] constructor.
   ///
-  /// If [stopWords] are not specified, English stop-words are used, otherwise
-  /// they are a list of words that will be removed of the input. A specific
-  /// list of [stopWords] can be specified to use another language for example.
-  /// > See [StopWords].
+  /// Returns the results returned by the callback [queries].
+  static List<Result> processUnique({
+    required List<Element> elements,
+    PriorityMap priorities = const {'*': 1},
+    NormalizationSettings normalization = const NormalizationSettings.defaults(),
+    required List<Result> Function(Sherlock sherlock) queries,
+  }) {
+    final sherlock = Sherlock(elements: elements, normalization: normalization, priorities: priorities);
+    return queries(sherlock);
+  }
+
+  /// Searches for values matching more or less with the [input].
   ///
-  /// If [where] is not specified, it is a global search ('*'), otherwise it is
-  /// a list of the keys of the columns where to search.
+  /// Like all other query functions:
+  /// - When [where] is not specified, it's a global search in every column of the elements
   ///
-  /// Returns the research findings of this function.
+  /// Unlike all the other query functions:
+  /// - [where] can be a string (for global search) or a list of columns. Even if there is only one column where to
+  /// search, it must be put in a list.
+  ///
+  /// Default [stopWords] to be removed are the English ones (see [StopWords.en]).
+  /// > Provide an empty list of [stopWords] to not remove the stop words.
+  ///
+  /// It is not especially recommanded but, it's possible to not use the chosen normalization settings for the smart
+  /// search but use instead the global [normalization] settings.
+  ///
+  /// Returns its research findings.
   List<Result> search({
     dynamic where = '*',
     required String input,
     List<String> stopWords = StopWords.en,
+    bool useGlobalNormalization = false,
   }) {
-    Where(where: where).checkValidity();
+    // No where parameter provided or no input provided.
+    if (where == [] || input.isEmpty) {
+      return [];
+    }
 
-    // Stores the [normalization] to restore it at the end of the search.
-    final storedOldNormalization = normalization;
+    // Manager for the where parameter.
+    var smartWhere = Where(where: where);
+    smartWhere.checkValidity();
 
-    // Its own [NormalizationSettings].
-    normalization = NormalizationSettings(
-      normalizeCase: true,
-      normalizeCaseType: false,
-      removeDiacritics: true,
-    );
+    // Uses the global normalization settings only when it is specified, otherwise uses its own normalization settings.
+    var localNormalization = useGlobalNormalization
+        ? normalization
+        : NormalizationSettings(
+            normalizeCase: true,
+            normalizeCaseType: false,
+            removeDiacritics: true,
+          );
 
-    // Normalizes the input string and remove the [stopWords].
+    // Normalises the input and removes the stop words.
     input = input.normalize(normalization).removeStopWords(stopWords);
 
+    // Normalization might have killed the input.
+    // Defence code, God only knows.
     if (input.isEmpty) {
       return [];
     }
 
-    // Splits the input into keywords.
+    // All the results from all the queries.
+    List<Result> allResults = [];
+
+    // Equality search.
+    allResults += _searchExtension(
+      smartWhere,
+      query: (where) => queryBool(
+        where: where,
+        fn: (value) {
+          // Cannot compare the whole input with a non-string value.
+          if (value.runtimeType != String) {
+            return false;
+          }
+
+          // Whether the whole input is perfectly equals to the value.
+          return value.toString().normalize(localNormalization) == input;
+        },
+      ),
+    );
+
+    // "Starts with" search.
+    allResults += _searchExtension(
+      smartWhere,
+      query: (where) => queryBool(
+        where: where,
+        fn: (value) {
+          // Cannot compare the whole input with a non-string value.
+          if (value.runtimeType != String) {
+            return false;
+          }
+
+          // Whether the whole input is the beginning of the value.
+          return value.toString().normalize(normalization).startsWith(input);
+        },
+      ),
+    );
+
+    // Splits the input into keywords and removes the empty keyword the split might create because of the double spaces.
     final inputKeywords = input.split(' ')..removeWhere((e) => e.isEmpty);
 
-    // Creates an easily-manipulable 'where'.
-    var smartWhere = Where(where: where);
-
-    _resetResults = false;
-
-    // Avoid duplicate code.
-    void smartQuery({required List<Result> Function(String where) query}) {
-      if (smartWhere.isGlobal) {
-        query(where);
-        return;
-      }
-
-      for (var column in smartWhere.columns) {
-        query(column);
-      }
-    }
-
-    // Being equal.
-    smartQuery(
-      query: (where) => queryBool(
-        where: where,
-        fn: (value) {
-          if (value.runtimeType != String) {
-            return false;
-          }
-
-          return value.toString().normalize(normalization) == input;
-        },
-      ),
-    );
-
-    // Starting with.
-    smartQuery(
-      query: (where) => queryBool(
-        where: where,
-        fn: (value) {
-          if (value.runtimeType != String) {
-            return false;
-          }
-
-          final normalizedValue = value.toString().normalize(normalization);
-          return normalizedValue.startsWith(input);
-        },
-      ),
-    );
-
-    // Searches for all the keywords at once.
+    // "All keywords at once" search.
     final regexAll = RegexHelper.flexAll(
       keywords: inputKeywords,
       searchWords: true,
     );
 
-    // All keywords in.
-    smartQuery(
+    allResults += _searchExtension(
+      smartWhere,
       query: (where) => query(where: where, regex: regexAll),
     );
 
-    // Searches any word from the keywords.
+    // "Any word from the keywords" search.
     final regexAny = RegexHelper.any(
       keywords: inputKeywords,
       searchWords: true,
     );
 
     // At least all keywords in.
-    smartQuery(
+    allResults += _searchExtension(
+      smartWhere,
       query: (where) => query(where: where, regex: regexAny),
     );
 
-    // Restores the [normalization].
-    normalization = storedOldNormalization;
+    // Creates a new list of results that will be returned by this function.
+    List<Result> results = [];
 
-    // Resets the current results.
-    _resetResults = true;
+    // Removes the duplicates.
+    // Browses the unchecked results (that might contain duplicates) to create a new safe list of results.
+    for (Result result in allResults) {
+      // Results already in the results are not added.
+      _addResultChecked(refDestination: results, element: result.element, priority: result.priority);
+    }
 
-    return _results();
+    return results;
   }
 
-  /// Searches for values matching with the [regex], in [where].
+  /// Extension of the [search] function for repetitive tasks.
+  List<Result> _searchExtension(
+    Where smartWhere, {
+    required List<Result> Function(String where) query,
+  }) {
+    // Calls the query for all the columns.
+    if (smartWhere.isGlobal) {
+      // Returns the results of the query call.
+      return query('*');
+    }
+
+    // All the results from the query calls.
+    List<Result> allResults = [];
+
+    // Calls the query for every column specified.
+    for (var column in smartWhere.columns) {
+      // Adds the results of this query to the list of results which will be returned by this function.
+      allResults += query(column);
+    }
+
+    return allResults;
+  }
+
+  /// Searches for values matching with the given regular expression in the column(s) [where].
   ///
-  /// If [where] is not specified, it is a global search ('*'), otherwise it is
-  /// the key of the column where to search.
+  /// Could be renamed `queryRegex`.
   ///
-  /// Applies the [normalization] or the [specificNormalization] when specified.
+  /// Like all other query functions:
+  /// - When [where] is not specified, it's a global search in every column of the elements
+  /// - When [specificNormalization] is specified, it is used instead of the global [normalization] settings. However,
+  /// the global [normalization] settings are still used as fallback when [specificNormalization] does not provide a
+  /// setting.
   ///
-  /// Returns the research findings of this function.
+  /// Returns its research findings.
   List<Result> query({
     String where = '*',
     required String regex,
     NormalizationSettings? specificNormalization,
   }) {
-    // Stores the [normalization] to restore it at the end of the query.
-    var savedOldNormalization = normalization;
+    // Normalization settings to give when function needs them.
+    var localNormalization = normalization;
 
-    // Uses the specific normalization parameters.
     if (specificNormalization != null) {
-      normalization.updateFrom(specificNormalization);
+      // Uses the specific normalization settings for now.
+      localNormalization = NormalizationSettings.from(normalization);
+      localNormalization.updateFrom(specificNormalization);
     }
 
-    /// Creates the [RegExp] from the given [String] regex.
+    // Creates a regular expression object from the regular expression given as string.
+    // Takes into consideration the normalization case sensitivity setting.
     var what = RegExp(regex, caseSensitive: normalization.caseSensitivity);
 
-    /// Adds result when [what] is matching with the [regex].
-    ///
-    /// Recursive function when [stringOrList] is a [List].
-    void addWhenMatch(dynamic stringOrList, int priority) {
-      if (stringOrList == null) {
-        return;
-      }
-
-      if (stringOrList.runtimeType == String) {
-        // Normalize the string following the [normalizeSettings].
-        stringOrList = stringOrList.toString().normalize(normalization);
-        // The string contains a value matching with the [regex], adds the current
-        // element to the results.
-        if (what.hasMatch(stringOrList)) {
-          _addResult(priority: priority);
-        }
-
-        return;
-      }
-
-      /// Recursive call to check each string of the list.
-      if (stringOrList.runtimeType == List<String>) {
-        /// Calls this function recursively for all the strings of the list.
-        for (String string in stringOrList) {
-          addWhenMatch(string, priority);
-        }
-
-        return;
-      }
-
-      /// Recursive call for list of list or list of list of list etc...
-      if (stringOrList.runtimeType == List<dynamic>) {
-        /// Calls this function recursively for all the objects of the list.
-        for (dynamic dyn in stringOrList) {
-          addWhenMatch(dyn, priority);
-        }
-
-        return;
-      }
-    }
-
-    /// Performs the query.
-    final results = _queryAny(where, (columnId, priority) {
-      addWhenMatch(_currentElement[columnId], priority);
+    return _anyQuery(where, (element, columnId, priority, refResults) {
+      // Can be both a string, a list or even something another object but it would be ignored.
+      final value = element[columnId];
+      _queryExtension(refResults, value, element, priority, what, localNormalization);
     });
-
-    // Restores the [normalization].
-    normalization = savedOldNormalization;
-
-    return results;
   }
 
-  /// Searches for values when a key exists for [what] in [where].
-  ///
-  /// Returns the research findings of this function.
-  List<Result> queryExist({required String where, required String what}) {
-    return _queryAny(where, (columnId, priority) {
-      /// Searches in the specified column.
-      /// When [what] does not exist, does nothing.
-      var value = _currentElement[columnId];
+  /// Extension of the [query] function in order to make recursive calls.
+  _queryExtension(
+    List<Result> refResults,
+    dynamic stringOrList,
+    Element element,
+    int priority,
+    RegExp what,
+    NormalizationSettings localNormalization,
+  ) {
+    // Defence code, only God knows.
+    if (stringOrList == null) {
+      return;
+    }
 
-      /// Does not exist, or the value exists but it is null.
+    // String case
+    if (stringOrList.runtimeType == String) {
+      // Regular expression is invalid with this value. Returns.
+      if (!what.hasMatch(stringOrList.toString().normalize(localNormalization))) {
+        return;
+      }
+
+      // The result is matching, adds it.
+      _addResultChecked(refDestination: refResults, element: element, priority: priority);
+
+      return;
+    }
+
+    // List of strings case
+    if (stringOrList.runtimeType == List<String>) {
+      // Recursive call for each string in the list of strings.
+      for (String string in stringOrList) {
+        _queryExtension(refResults, string, element, priority, what, localNormalization);
+      }
+
+      return;
+    }
+
+    // List of ?? of ?? ... case
+    if (stringOrList.runtimeType == List<dynamic>) {
+      // Recursive call for each object in the list.
+      for (dynamic stringOrList in stringOrList) {
+        _queryExtension(refResults, stringOrList, element, priority, what, localNormalization);
+      }
+
+      return;
+    }
+  }
+
+  /// Searches for [what] existing in the [where] column when exists.
+  ///
+  /// Like all other query functions:
+  /// - When [where] is not specified, it's a global search in every column of the elements
+  /// - When [specificNormalization] is specified, it is used instead of the global [normalization] settings. However,
+  /// the global [normalization] settings are still used as fallback when [specificNormalization] does not provide a
+  /// setting.
+  ///
+  /// Returns its research findings.
+  List<Result> queryExist({
+    required String where,
+    required String what,
+  }) {
+    return _anyQuery(where, (element, columnId, priority, refResults) {
+      // Gets the value from the currently "studied" column of the element.
+      final value = element[columnId];
+
+      // Does not exist or the value exists but it is null.
       if (value == null || value[what] == null) {
         return;
       }
 
-      _addResult(priority: priorities[columnId] ?? priorities['*']!);
+      // The result is matching, adds it.
+      _addResultChecked(refDestination: refResults, element: element, priority: priority);
     });
   }
 
-  /// Searches for a value corresponding to a boolean expression in [where].
+  /// Searches for values corresponding to a boolean expression in the column(s) [where].
   ///
-  /// If [where] is not specified, it is a global search ('*'), otherwise it is
-  /// the key of the column where to search.
+  /// Like all other query functions:
+  /// - When [where] is not specified, it's a global search in every column of the elements
+  /// - When [specificNormalization] is specified, it is used instead of the global [normalization] settings. However,
+  /// the global [normalization] settings are still used as fallback when [specificNormalization] does not provide a
+  /// setting.
   ///
-  /// Returns the research findings of this function.
+  /// Returns its research findings.
   List<Result> queryBool({
     String where = '*',
     required bool Function(dynamic value) fn,
   }) {
-    return _queryAny(where, (columnId, priority) {
-      final colVal = _currentElement[columnId];
+    return _anyQuery(where, (element, columnId, priority, refResults) {
+      // Gets the value from the currently "studied" column of the element.
+      final value = element[columnId];
 
-      if (colVal == null) {
+      // Defence code, only God knows.
+      if (value == null) {
         return;
       }
 
-      /// The return value of [fn] is true, it's a match !
-      if (fn(colVal)) {
-        _addResult(
-          priority: priorities[columnId] ?? priorities['*']!,
-        );
+      if (!fn(value)) {
+        // Negative result from the callback, returns nothing.
+        return;
       }
+
+      // The result is matching, adds it.
+      _addResultChecked(refDestination: refResults, element: element, priority: priority);
     });
   }
 
-  /// Searches for a value which is equal to [match], in [where].
+  /// Searches for values equal to [match] in the column(s) [where].
   ///
-  /// If [where] is not specified, it is a global search ('*'), otherwise it is
-  /// the key of the column where to search.
+  /// Like all other query functions:
+  /// - When [where] is not specified, it's a global search in every column of the elements
+  /// - When [specificNormalization] is specified, it is used instead of the global [normalization] settings. However,
+  /// the global [normalization] settings are still used as fallback when [specificNormalization] does not provide a
+  /// setting.
   ///
-  /// Applies the [normalization] or the [specificNormalization] when specified.
-  ///
-  /// Returns the research findings of this function.
+  /// Returns its research findings.
   List<Result> queryMatch({
     String where = '*',
     required dynamic match,
     NormalizationSettings? specificNormalization,
   }) {
-    // Stores the [normalization] to restore it at the end of the query.
-    var savedOldNormalization = normalization;
+    // Whether the object to compare is a string.
+    if (match.runtimeType == String) {
+      // Normalization settings to give when function needs them.
+      var localNormalization = normalization;
 
-    // Uses the specific normalization parameters.
-    if (specificNormalization != null) {
-      normalization.updateFrom(specificNormalization);
-    }
+      if (specificNormalization != null) {
+        // Uses the specific normalization settings for now.
+        localNormalization = NormalizationSettings.from(normalization);
+        localNormalization.updateFrom(specificNormalization);
+      }
 
-    bool stringComparison = match.runtimeType == String;
-
-    if (stringComparison) {
-      final results = queryBool(
+      // Classic comparison with a string.
+      // Normalization settings are applied.
+      return queryBool(
         where: where,
         fn: (value) {
-          /// Cannot lowercase a non-string value.
+          // Comparison is supposed to be done between two strings if the match object is a string.
           if (value.runtimeType != String) {
+            // If they don't have the same type, they cannot be equal.
+            // The previous test could also be (value.runtimeType == match.runtimeType) which would mean that both are
+            // strings.
             return false;
           }
 
-          return value.toString().normalize(normalization) == match.toString().normalize(normalization);
+          return value.toString().normalize(localNormalization) == match.toString().normalize(localNormalization);
         },
       );
-
-      return results;
     }
 
-    /// Dynamic comparison.
-    final results = queryBool(where: where, fn: (value) => value == match);
+    // Dynamic comparison between unknown objects.
+    // No normalization is applied to values.
+    return queryBool(where: where, fn: (value) => value == match);
+  }
 
-    // Restores the [normalization].
-    normalization = savedOldNormalization;
+  /// Repeated browsing process for all the query functions.
+  ///
+  /// The [callback] should add the results it found in the given [callback.refResults] variable.
+  ///
+  /// The returned value of this function is supposed to be returned by the query function calling it.
+  List<Result> _anyQuery(
+    String where,
+    void Function(
+      Element element,
+      String columnId,
+      int priority,
+      List<Result> refResults,
+    ) callback,
+  ) {
+    // Nothing to search, no results to return.
+    if (elements.isEmpty) {
+      return [];
+    }
+
+    // All the results of this function.
+    List<Result> results = [];
+
+    /// Browses all the elements one by one and call the callback whenever it's
+    /// needed.
+    for (Element element in elements) {
+      if (Where(where: where).isGlobal) {
+        // The returned results of all the callbacks called for every column.
+        // Must not be confounded with the results returned by the function.
+        List<Result> allResults = [];
+
+        // In global queries, all columns of the element are tested.
+        // The callback is called for each column.
+        for (var key in element.keys) {
+          // Gives results like a reference since the callback shall modify this variable.
+          callback(element, key, priorities[key] ?? priorities['*']!, results);
+        }
+
+        results += allResults;
+        continue;
+      }
+
+      // Query in a specified column.
+      // Gives results like a reference since the callback shall modify this variable.
+      callback(element, where, priorities[where] ?? priorities['*']!, results);
+    }
 
     return results;
   }
 
-  /// Browses the [elements] to perform a research, calls [fn] giving the column
-  /// id where the search has to be performed in, and the priority of this
-  /// column.
+  /// Checks if the [element] is not already in [refDestination]. If it's the case, it is not added to [refDestination],
+  /// otherwise calls [_addResultUnchecked] to add the element in [refDestination] wrapped as a [Result] with its
+  /// priority.
   ///
-  /// The callback [fn] can do anything, but it is designed to [_addResult]
-  /// with the matching values.
-  ///
-  /// Returns the research findings of this function.
-  List<Result> _queryAny(
-    String where,
-    void Function(String columnId, int priority) fn,
-  ) {
-    for (Element element in elements) {
-      /// Sets the [_currentElement] in order to be used by the other functions.
-      _currentElement = element;
+  /// Lists in Dart are passed like references, it means that the function directly modify the given list. Don't give a
+  /// copy of the list!
+  void _addResultChecked({
+    required List<Result> refDestination,
+    required Element element,
+    required int priority,
+  }) {
+    // Partially unwraps the results from [refDestination] in order to get the
+    // elements.
+    final destElements = refDestination.map((result) => result.element);
 
-      if (Where(where: where).isGlobal) {
-        /// Performs search in all the columns of the [_currentElement].
-        for (var key in _currentElement.keys) {
-          fn(
-            key,
-            priorities[key] ?? priorities['*']!,
-          );
-        }
-      } else {
-        /// Performs a search in the specified column.
-        fn(
-          where,
-          priorities[where] ?? priorities['*']!,
-        );
-      }
-    }
-
-    return _results();
-  }
-
-  /// Adds the [_currentElement] wrapped into a [Result] object, into the
-  /// [_currentResults].
-  ///
-  /// Don't add duplicates.
-  void _addResult({required int priority}) {
-    final result = Result(
-      element: _currentElement,
-      priority: priority,
-    );
-
-    // Avoid duplicates
-    for (var element in _currentResults.map((result) => result.element)) {
-      if (element == _currentElement) {
+    for (var destElement in destElements) {
+      // This element is already in the list of results. Don't add it.
+      if (destElement == element) {
         return;
       }
     }
 
-    _currentResults.add(result);
+    // Result already checked, can safely call the add function that does not check anything.
+    _addResultUnchecked(refDestination: refDestination, element: element, priority: priority);
   }
 
-  /// Function to call at the end of a query in order the return the results.
-  List<Result> _results() {
-    // Stores the results to return them.
-    List<Result> results = List.from(_currentResults);
-
-    if (_resetResults) {
-      // Resets the list to use it again in other calls.
-      _currentResults = [];
-    }
-
-    return results;
+  /// Creates a [Result] object from the [element] and its [priority] and adds it to the [refDestination].
+  ///
+  /// Lists in Dart are passed like references, it means that the function directly modify the given list. Don't give a
+  /// copy of the list!
+  void _addResultUnchecked({
+    required List<Result> refDestination,
+    required Element element,
+    required int priority,
+  }) {
+    // Adds it to the list of results as a result.
+    final result = Result(element: element, priority: priority);
+    refDestination.add(result);
   }
 }
