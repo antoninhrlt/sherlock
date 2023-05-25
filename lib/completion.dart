@@ -2,13 +2,18 @@ import 'package:sherlock/sherlock.dart';
 import 'package:sherlock/result.dart';
 import 'package:sherlock/types.dart';
 
-/// A search completion tool.
+/// Tool to complete the user input in search bars.
 ///
-/// Uses [Sherlock] to help user completing their input.
+/// **This is not AI**. It works with [Sherlock]. For example, it can complete the name the user is writing from the
+/// names database if a user wants to find someone from their name. "Linus To" (user input) -> "Linus Torvalds"
+/// (completion/suggestion).
+///
+/// Also called "suggestions" instead of "completions" in the [SearchAnchor] by Flutter.
 class SherlockCompletion {
-  /// [Sherlock] instance used to find completions.
+  /// Researcher to find completion texts from the given [elements].
   final Sherlock sherlock;
 
+  /// # Example/Explanations
   /// ```json
   /// {
   ///   'name': 'farm',
@@ -25,32 +30,38 @@ class SherlockCompletion {
   /// ```
   /// The user input might be `far...` in order to find a *farm* or the *far
   /// west*, it seems the user is not looking for a *nightclub*...
-  /// [SherlockCompletion] might be used in the `'name'` column.
+  /// [SherlockCompletion] might be used in the `'name'` column as following:
   /// ```dart
-  /// SherlockCompletion(where: 'name', elements: /*todo*/);
+  /// SherlockCompletion(where: 'name', elements: /* ... */);
   /// ```
   final String where;
 
+  /// Creates a new [SherlockCompletions]. Basically the given [elements] are the same given to the [Sherlock] object
+  /// which might have been built before for researches.
+  ///
+  /// To optimise, the [elements] could contain only the columns [where].
   SherlockCompletion({required this.where, required elements}) : sherlock = Sherlock(elements: elements);
 
-  /// Gets values which could be the completion of [input]. These values are the
-  /// columns [where] of the matching [elements]. The [Sherlock]'s [results] can
-  /// be retrieved to get the matching [elements] instead.
+  /// Returns the possible completions of the given user [input].
   ///
-  /// Sets the minimum number of results wanted with [minResults]. If
-  /// [minResults] is -1 or less or equal than the number of results, the normal
-  /// search is done. Otherwise, more searches will be performed but the results
-  /// might be less relevant. Besides, it is possible to get less results than
-  /// [minResults].
+  /// The researches are done in two times:
+  /// - Basic researches that might return no result.
+  /// - Forced further researches when the minimum of results is not reached
   ///
-  /// Sets a maximum number of results with [maxResults]. If [maxResults] is -1
-  /// or greater than the number of results, all the results are returned.
+  /// ## Minimum and maximum numbers of results.
+  /// The minimum number of results expected from this function can be specified with [minResults].
+  /// The maximum number of results expected from this function can be specified with [maxResults].
+  ///
+  /// When the minimum or results is reached, the "further researches" are not done. Otherwise, it forces to search more
+  /// to try to get enough results as expected.
+  ///
+  /// Never returns more than [maxResults] results.
   List<String> input({
     required String input,
     bool caseSensitive = false,
     bool? caseSensitiveFurtherSearches,
-    int minResults = -1,
-    int maxResults = -1,
+    int? minResults,
+    int? maxResults,
   }) {
     // No input, no results.
     if (input.isEmpty) {
@@ -80,7 +91,7 @@ class SherlockCompletion {
 
     // Performs further searches to get at least minimum number of results
     // wanted.
-    if (minResults != -1 && minResults > allResults.length) {
+    if (minResults != null && minResults > allResults.length) {
       // Searches for keyword starting with the [input].
       allResults += sherlock.queryBool(
         where: where,
@@ -139,7 +150,7 @@ class SherlockCompletion {
     var stringResults = results.map((e) => e[where].toString()).toList();
 
     // Returns only [maxResults] results.
-    if (maxResults != -1 && maxResults < results.length) {
+    if (maxResults != null && maxResults < results.length) {
       return stringResults.getRange(0, maxResults).toList();
     }
 
@@ -147,9 +158,13 @@ class SherlockCompletion {
     return stringResults;
   }
 
-  /// Returns the ranges of the unchanged parts of the completion results.
+  /// Returns the range of the text which has not been changed by the
+  /// completions for each completion.
   ///
-  /// The unchanged part is the part of a completion result being the input.
+  /// Can be used to bold the unchanged part, the part typed by the user.
+  ///
+  /// ## Example
+  /// input: "Linus T" -> completion: "Linus Torvalds". The unchanged range is from 'L' to 'T' so 0 to 6.
   List<Range> unchangedRanges({
     required String input,
     required List<String> results,
