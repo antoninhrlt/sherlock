@@ -81,7 +81,7 @@ void main() {
   test('normalizeCase', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalization: NormalizationSettings(
+      normalization: const NormalizationSettings(
         normalizeCase: true,
         normalizeCaseType: false,
         removeDiacritics: false,
@@ -91,15 +91,23 @@ void main() {
     final results1 = sherlock.query(where: 'name', regex: r'^something NOT UPPER case$');
     debugPrint(results1.toString());
 
-    sherlock.normalization.caseSensitivity = true;
-    final results2 = sherlock.query(where: 'name', regex: r'^something NOT UPPER case$');
+    final results2 = sherlock.query(
+      where: 'name',
+      regex: r'^something NOT UPPER case$',
+      specificNormalization: const NormalizationSettings(
+        normalizeCase: false,
+        normalizeCaseType: false,
+        removeDiacritics: false,
+      ),
+    );
+
     debugPrint(results2.toString());
   });
 
   test('normalizeAll', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalization: NormalizationSettings(
+      normalization: const NormalizationSettings(
         normalizeCase: true,
         normalizeCaseType: true,
         removeDiacritics: true,
@@ -113,7 +121,7 @@ void main() {
   test('specificNormalize', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalization: NormalizationSettings(
+      normalization: const NormalizationSettings(
         normalizeCase: true,
         normalizeCaseType: true,
         removeDiacritics: true,
@@ -126,7 +134,9 @@ void main() {
     final results2 = sherlock.query(
       where: 'name',
       regex: r'^something with a weird name$',
-      specificNormalization: NormalizationSettings(
+      specificNormalization: const NormalizationSettings(
+        normalizeCase: true,
+        normalizeCaseType: true,
         removeDiacritics: false,
       ),
     );

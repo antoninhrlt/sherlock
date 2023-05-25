@@ -50,6 +50,9 @@ class NormalizationSettings {
       : normalizeCase = object.normalizeCase,
         normalizeCaseType = object.normalizeCaseType,
         removeDiacritics = object.removeDiacritics;
+
+  /// Returns whether not the case is normalized.
+  bool get caseSensitivity => !normalizeCase;
 }
 
 /// Extends [String] with a function to normalize it.

@@ -102,13 +102,7 @@ class Sherlock {
     smartWhere.checkValidity();
 
     // Uses the global normalization settings only when it is specified, otherwise uses its own normalization settings.
-    var localNormalization = useGlobalNormalization
-        ? normalization
-        : NormalizationSettings(
-            normalizeCase: true,
-            normalizeCaseType: false,
-            removeDiacritics: true,
-          );
+    var localNormalization = useGlobalNormalization ? normalization : const NormalizationSettings.defaults();
 
     // Normalises the input and removes the stop words.
     input = input.normalize(normalization).removeStopWords(stopWords);
@@ -232,13 +226,7 @@ class Sherlock {
     NormalizationSettings? specificNormalization,
   }) {
     // Normalization settings to give when function needs them.
-    var localNormalization = normalization;
-
-    if (specificNormalization != null) {
-      // Uses the specific normalization settings for now.
-      localNormalization = NormalizationSettings.from(normalization);
-      localNormalization.updateFrom(specificNormalization);
-    }
+    final localNormalization = specificNormalization ?? normalization;
 
     // Creates a regular expression object from the regular expression given as string.
     // Takes into consideration the normalization case sensitivity setting.
@@ -375,13 +363,7 @@ class Sherlock {
     // Whether the object to compare is a string.
     if (match.runtimeType == String) {
       // Normalization settings to give when function needs them.
-      var localNormalization = normalization;
-
-      if (specificNormalization != null) {
-        // Uses the specific normalization settings for now.
-        localNormalization = NormalizationSettings.from(normalization);
-        localNormalization.updateFrom(specificNormalization);
-      }
+      final localNormalization = specificNormalization ?? normalization;
 
       // Classic comparison with a string.
       // Normalization settings are applied.

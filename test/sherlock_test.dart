@@ -127,21 +127,28 @@ void main() {
   test('queryMatch', () {
     final sherlock = Sherlock(
       elements: activities,
-      normalization: NormalizationSettings.matching(),
+      normalization: const NormalizationSettings.matching(),
     );
 
     /// All activities having a title corresponding to 'Parc'.
     final results1 = sherlock.queryMatch(where: 'title', match: 'Parc').sorted().unwrap();
     debugPrint(results1.toString());
 
-    sherlock.normalization.caseSensitivity = false;
-
     /// All activities having a title corresponding to 'parc', no matter
     /// the case.
-    final results2 = sherlock.queryMatch(where: 'title', match: 'pArC').sorted().unwrap();
+    final results2 = sherlock
+        .queryMatch(
+          where: 'title',
+          match: 'pArC',
+          specificNormalization: const NormalizationSettings(
+            normalizeCase: true,
+            normalizeCaseType: false,
+            removeDiacritics: false,
+          ),
+        )
+        .sorted()
+        .unwrap();
     debugPrint(results2.toString());
-
-    sherlock.normalization.caseSensitivity = true;
 
     /// All activities having at least one column's value corresponding to
     /// 'VR immersion'.
