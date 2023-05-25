@@ -46,11 +46,11 @@ See the [examples](example/README.md).
 See also the [search completion tool](#search-completion-tool).
 
 - ### Quick Sherlock
-  Use to execute any task with a volatile `Sherlock` instance. The function parameters are constructed like the `Sherlock` constructor plus a callback in which tasks are executed.
+  Use to execute any task with a unique `Sherlock` instance. The function parameters are constructed like the `Sherlock` constructor plus a callback in which tasks are executed.
 
   Prototype
   ```dart
-  List<Element> sherlock(
+  List<Element> processUnique(
     List<Element> elements,
     PriorityMap priorities = const {'*': 1},
     NormalizationSettings normalization = /* default */,
@@ -80,10 +80,10 @@ See also the [search completion tool](#search-completion-tool).
     },
   ];
 
-  final foundUsers = sherlock(elements: users, (sherlock) {
-    List<Result> allResults = sherlock.queryMatch(where: 'firstName', 'Finn');
-    allResults += sherlock.queryMatch(where: 'city', 'Edinburgh');
-    return allResults;
+  final results = processUnique(elements: users, (sherlock) {
+    final resultsName = sherlock.queryMatch(where: 'firstName', 'Finn');
+    final resultsCity = sherlock.queryMatch(where: 'city', 'Edinburgh');
+    return [...resultsName, ...resultsCity];
   });
   ```
 

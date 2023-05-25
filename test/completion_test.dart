@@ -45,7 +45,7 @@ void main() {
     final results = completion.input(input: input, minResults: 3);
     debugPrint(results.toString());
     debugPrint(
-      completion.unchangedRanges(input: input, results: results).toString(),
+      SherlockCompletion.unchangedRanges(input: input, results: results).toString(),
     );
   });
 
