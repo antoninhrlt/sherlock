@@ -1,10 +1,12 @@
 library sherlock;
 
-import 'package:sherlock/normalize.dart';
-import 'package:sherlock/regex.dart';
+import 'package:sherlock/tools/normalize.dart';
+import 'package:sherlock/tools/regex.dart';
 import 'package:sherlock/result.dart';
 import 'package:sherlock/stopwords.dart';
 import 'package:sherlock/types.dart';
+
+export 'tools/normalize.dart';
 
 /// Efficient and customizable search engine for local data.
 ///
