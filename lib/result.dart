@@ -4,13 +4,13 @@ import 'package:sherlock/types.dart';
 /// to sort it later.
 class Result {
   /// The research finding.
-  Element element;
+  final Element element;
 
   /// The priority of the result for sorting.
-  int priority;
+  final int priority;
 
   /// Creates a [Result] from an element and its priority.
-  Result({required this.element, required this.priority});
+  const Result({required this.element, required this.priority});
 }
 
 extension SortResults on List<Result> {
@@ -31,9 +31,9 @@ extension RemoveDuplicates on List<Result> {
   List<Result> removeDuplicates() {
     List<Result> newResults = [];
 
-    for (Result result in this) {
-      for (Element e in newResults.map((e) => e.element)) {
-        if (e == result.element) {
+    for (final result in this) {
+      for (final element in newResults.map((e) => e.element)) {
+        if (element == result.element) {
           break;
         }
       }

@@ -7,7 +7,7 @@ import 'package:sherlock/types.dart';
 /// Uses [Sherlock] to help user completing their input.
 class SherlockCompletion {
   /// [Sherlock] instance used to find completions.
-  Sherlock sherlock;
+  final Sherlock sherlock;
 
   /// ```json
   /// {
@@ -29,16 +29,7 @@ class SherlockCompletion {
   /// ```dart
   /// SherlockCompletion(where: 'name', elements: /*todo*/);
   /// ```
-  String where;
-
-  List<Element> _results = [];
-
-  /// Results found by [Sherlock] in the last [input] call.
-  List<Element> get results {
-    final List<Element> results = List.from(_results);
-    _results = [];
-    return results;
-  }
+  final String where;
 
   SherlockCompletion({required this.where, required elements}) : sherlock = Sherlock(elements: elements);
 
@@ -141,15 +132,14 @@ class SherlockCompletion {
       );
     }
 
-    // Gets the results as they actually are and sorted.
-    _results = allResults.sorted().unwrap();
+    // The actual results from Sherlock.
+    final results = allResults.sorted().unwrap();
 
     // Does not return the elements but the fields [where].
     var stringResults = results.map((e) => e[where].toString()).toList();
 
     // Returns only [maxResults] results.
     if (maxResults != -1 && maxResults < results.length) {
-      _results = results.getRange(0, maxResults).toList();
       return stringResults.getRange(0, maxResults).toList();
     }
 
@@ -166,8 +156,8 @@ class SherlockCompletion {
   }) {
     var ranges = <Range>[];
 
-    for (var result in results) {
-      var ix = result.toLowerCase().indexOf(input.toLowerCase());
+    for (final result in results) {
+      final ix = result.toLowerCase().indexOf(input.toLowerCase());
       ranges.add(Range(start: ix, end: ix + input.length));
     }
 

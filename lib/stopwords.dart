@@ -1,7 +1,7 @@
 /// Provides the [removeStopWords] function to remove stop-words from a [String]
 /// object.
 extension RemoveStopWords on String {
-  /// Returns the string without the [stopWords].
+  /// Returns the string without the the stop words in it.
   ///
   /// Every word of the [stopWords] is removed when found in the string.
   String removeStopWords(List<String> stopWords) {
@@ -15,8 +15,8 @@ extension RemoveStopWords on String {
 
     final splitted = split(' ');
 
-    for (String word in splitted) {
-      for (String stopWord in stopWords) {
+    for (final String word in splitted) {
+      for (final String stopWord in stopWords) {
         if (word.toLowerCase() != stopWord.toLowerCase()) {
           continue;
         }
@@ -47,16 +47,16 @@ extension RemoveStopWords on String {
 /// See credits on the **stopwords-iso** github repository for all sources :
 /// https://github.com/stopwords-iso/stopwords-iso/blob/master/CREDITS.md
 ///
-/// Usage :
+/// ## Usage
 /// ```dart
 /// // Gets the French stop-words.
 /// List<String> frenchStopWords = StopWords.fr;
 /// ```
 class StopWords {
-  /// Return singleton instance of StopWords
+  /// Returns singleton instance of [StopWords].
   factory StopWords() => _instance;
 
-  /// Default private constructor
+  /// Default private constructor.
   StopWords._();
 
   static const List<String> af = [

@@ -44,13 +44,18 @@ class StringOrList<T> {
   }
 }
 
-/// The simplest [Range] structure possible having a good debug print.
+/// A simple structure for ranges. Convertible to [List].
 class Range {
-  int start;
-  int end;
+  final int start;
+  final int end;
 
-  Range({required this.start, required this.end});
+  /// Creates a new [Range] between [start] and [end].
+  Range({
+    required this.start,
+    required this.end,
+  });
 
+  /// Transforms the [Range] object into a [List] of two elements ([start] and [end]).
   List<int> toList() {
     return [start, end];
   }

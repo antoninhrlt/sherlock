@@ -23,7 +23,7 @@ int levenshtein({required String a, required String b}) {
 
   // For all `i` and `j`: `distances[i][j]` will hold the distance between the
   // first `i` characters of `a` and the first `j` characters of `b`.
-  var distances = List.generate(
+  final distances = List.generate(
     a.length + 1,
     (i) => List.generate(
       b.length + 1,

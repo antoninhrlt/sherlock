@@ -38,12 +38,12 @@ class Sherlock {
   ///
   /// Initially set to "all the columns have an importance of 1". The default value for a column is 1 if the key '*' is
   /// not defined.
-  PriorityMap priorities;
+  final PriorityMap priorities;
 
   /// See [NormalizationSettings]'s documentation.
   ///
   /// Initially set to the default settings given by [NormalizationSettings.defaults].
-  NormalizationSettings normalization;
+  final NormalizationSettings normalization;
 
   /// Creates a new [Sherlock] object to search in [elements].
   Sherlock({
@@ -119,11 +119,8 @@ class Sherlock {
       return [];
     }
 
-    // All the results from all the queries.
-    List<Result> allResults = [];
-
     // Equality search.
-    allResults += _searchExtension(
+    final resultsEquality = _searchExtension(
       smartWhere,
       query: (where) => queryBool(
         where: where,
@@ -140,7 +137,7 @@ class Sherlock {
     );
 
     // "Starts with" search.
-    allResults += _searchExtension(
+    final resultsStarting = _searchExtension(
       smartWhere,
       query: (where) => queryBool(
         where: where,
@@ -165,7 +162,7 @@ class Sherlock {
       searchWords: true,
     );
 
-    allResults += _searchExtension(
+    final resultsRegexAll = _searchExtension(
       smartWhere,
       query: (where) => query(where: where, regex: regexAll),
     );
@@ -177,7 +174,7 @@ class Sherlock {
     );
 
     // At least all keywords in.
-    allResults += _searchExtension(
+    final resultsRegexAny = _searchExtension(
       smartWhere,
       query: (where) => query(where: where, regex: regexAny),
     );
@@ -187,7 +184,7 @@ class Sherlock {
 
     // Removes the duplicates.
     // Browses the unchecked results (that might contain duplicates) to create a new safe list of results.
-    for (Result result in allResults) {
+    for (final Result result in [...resultsEquality, ...resultsStarting, ...resultsRegexAll, ...resultsRegexAny]) {
       // Results already in the results are not added.
       _addResultChecked(refDestination: results, element: result.element, priority: result.priority);
     }
@@ -245,7 +242,7 @@ class Sherlock {
 
     // Creates a regular expression object from the regular expression given as string.
     // Takes into consideration the normalization case sensitivity setting.
-    var what = RegExp(regex, caseSensitive: normalization.caseSensitivity);
+    final what = RegExp(regex, caseSensitive: normalization.caseSensitivity);
 
     return _anyQuery(where, (element, columnId, priority, refResults) {
       // Can be both a string, a list or even something another object but it would be ignored.
@@ -433,20 +430,15 @@ class Sherlock {
 
     /// Browses all the elements one by one and call the callback whenever it's
     /// needed.
-    for (Element element in elements) {
+    for (final element in elements) {
       if (Where(where: where).isGlobal) {
-        // The returned results of all the callbacks called for every column.
-        // Must not be confounded with the results returned by the function.
-        List<Result> allResults = [];
-
         // In global queries, all columns of the element are tested.
         // The callback is called for each column.
-        for (var key in element.keys) {
+        for (final key in element.keys) {
           // Gives results like a reference since the callback shall modify this variable.
           callback(element, key, priorities[key] ?? priorities['*']!, results);
         }
 
-        results += allResults;
         continue;
       }
 
@@ -473,7 +465,7 @@ class Sherlock {
     // elements.
     final destElements = refDestination.map((result) => result.element);
 
-    for (var destElement in destElements) {
+    for (final destElement in destElements) {
       // This element is already in the list of results. Don't add it.
       if (destElement == element) {
         return;
