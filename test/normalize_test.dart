@@ -1,12 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sherlock/normalize.dart';
 import 'package:sherlock/sherlock.dart';
 
 void main() {
   test('normalize', () {
     var string = 'wéirdö nàmè AA';
-    string = string.normalize(NormalizationSettings(
+    string = string.normalize(const NormalizationSettings(
       normalizeCase: true,
       normalizeCaseType: false,
       removeDiacritics: true,
@@ -36,7 +35,7 @@ void main() {
   test('normalizeNothing', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalization: NormalizationSettings(
+      normalization: const NormalizationSettings(
         normalizeCase: false,
         normalizeCaseType: false,
         removeDiacritics: false,
@@ -50,7 +49,7 @@ void main() {
   test('normalizeDiacritics', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalization: NormalizationSettings(
+      normalization: const NormalizationSettings(
         normalizeCase: false,
         normalizeCaseType: false,
         removeDiacritics: true,
@@ -64,7 +63,7 @@ void main() {
   test('normalizeCaseType', () {
     var sherlock = Sherlock(
       elements: elements,
-      normalization: NormalizationSettings(
+      normalization: const NormalizationSettings(
         normalizeCase: false,
         normalizeCaseType: true,
         removeDiacritics: false,
