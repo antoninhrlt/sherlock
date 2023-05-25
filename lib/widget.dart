@@ -18,9 +18,14 @@ class SherlockSearchBar extends StatefulWidget {
 
   final Sherlock sherlock;
   final SherlockCompletion sherlockCompletion;
+  final int? sherlockCompletionMinResults;
+  final int? sherlockCompletionMaxResults;
   final void Function(String input, Sherlock sherlock)? onSearch;
 
-  final SherlockSuggestionsBuilder Function(BuildContext context, List<String> suggestions)? suggestionsBuilder;
+  final SherlockCompletionsBuilder Function(
+    BuildContext context,
+    List<String> completions,
+  )? completionsBuilder;
 
   const SherlockSearchBar({
     super.key,
@@ -37,8 +42,10 @@ class SherlockSearchBar extends StatefulWidget {
     this.hintStyle,
     required this.sherlock,
     required this.sherlockCompletion,
+    this.sherlockCompletionMinResults,
+    this.sherlockCompletionMaxResults,
     this.onSearch,
-    this.suggestionsBuilder,
+    this.completionsBuilder,
   });
 
   @override
@@ -78,13 +85,17 @@ class _SherlockSearchBarState extends State<SherlockSearchBar> {
         // Text inside the input field of the search bar.
         final input = controller.text;
         // SherlockCompletion's result for the input.
-        final suggestions = widget.sherlockCompletion.input(input: input);
+        final suggestions = widget.sherlockCompletion.input(
+          input: input,
+          minResults: widget.sherlockCompletionMinResults,
+          maxResults: widget.sherlockCompletionMaxResults,
+        );
 
-        final SherlockSuggestionsBuilder builder = (widget.suggestionsBuilder != null)
-            ? widget.suggestionsBuilder!(context, suggestions)
-            : SherlockSuggestionsBuilder(
-                suggestions: suggestions,
-                buildSuggestion: (suggestion) => Padding(
+        final SherlockCompletionsBuilder builder = (widget.completionsBuilder != null)
+            ? widget.completionsBuilder!(context, suggestions)
+            : SherlockCompletionsBuilder(
+                completions: suggestions,
+                buildCompletion: (suggestion) => Padding(
                   padding: const EdgeInsets.all(8),
                   child: Text(suggestion),
                 ),
@@ -97,12 +108,12 @@ class _SherlockSearchBarState extends State<SherlockSearchBar> {
 }
 
 /// Creates a list of widget in order to be displayed below the search input to
-/// show user suggestions on their search.
-class SherlockSuggestionsBuilder {
-  final List<String> suggestions;
-  final Widget Function(String suggestion) buildSuggestion;
+/// show user completions on their search.
+class SherlockCompletionsBuilder {
+  final List<String> completions;
+  final Widget Function(String completion) buildCompletion;
 
-  /// [suggestions] is the list of strings given by [SherlockCompletion.input]
+  /// [completions] is the list of strings given by [SherlockCompletion.input]
   /// or in the [SherlockSearchBar.suggestionsBuilder] field:
   /// ```
   /// SherlockSearchBar(
@@ -114,20 +125,20 @@ class SherlockSuggestionsBuilder {
   /// )
   /// ```
   ///
-  /// [buildSuggestion] builds a widget for the current suggestion
+  /// [buildCompletion] builds a widget for the current completion
   /// ```
-  /// SherlockSuggestionsBuilder(
-  ///   suggestions: suggestions,
-  ///   buildSuggestion: (suggestion) => Text(suggestion),
+  /// SherlockCompletionsBuilder(
+  ///   completions: completions,
+  ///   buildCompletion: (completion) => Text(buildCompletion),
   /// ),
   /// ```
-  SherlockSuggestionsBuilder({
-    required this.suggestions,
-    required this.buildSuggestion,
+  SherlockCompletionsBuilder({
+    required this.completions,
+    required this.buildCompletion,
   });
 
-  /// Builds all the suggestions into widgets.
+  /// Builds all the completions into widgets.
   List<Widget> build() {
-    return suggestions.map((suggestion) => buildSuggestion(suggestion)).toList();
+    return completions.map((completion) => buildCompletion(completion)).toList();
   }
 }

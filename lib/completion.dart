@@ -147,7 +147,7 @@ class SherlockCompletion {
     final results = allResults.sorted().unwrap();
 
     // Does not return the elements but the fields [where].
-    var stringResults = results.map((e) => e[where].toString()).toList();
+    var stringResults = results.map((e) => e[where].toString()).toSet().toList();
 
     // Returns only [maxResults] results.
     if (maxResults != null && maxResults < results.length) {
@@ -165,7 +165,7 @@ class SherlockCompletion {
   ///
   /// ## Example
   /// input: "Linus T" -> completion: "Linus Torvalds". The unchanged range is from 'L' to 'T' so 0 to 6.
-  List<Range> unchangedRanges({
+  static List<Range> unchangedRanges({
     required String input,
     required List<String> results,
   }) {

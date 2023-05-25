@@ -20,8 +20,8 @@ class Sherlock {
   /// [
   ///   {
   ///     'name': 'Jiji',
-  ///     'description': 'Cute cat'
-  ///     'from': 'Kiki's delivery service',
+  ///     'description': 'Cute cat',
+  ///     'from': 'Kiki\'s delivery service',
   ///     'by': 'Studio Ghibli'
   ///   },
   ///   {
