@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:sherlock/completion.dart';
 import 'package:sherlock/result.dart';
@@ -58,7 +60,23 @@ class ExampleView extends StatefulWidget {
 }
 
 class ExampleState extends State<ExampleView> {
-  List<Map<String, dynamic>> _results = [];
+  Future<List<Result>> _sherlockResults = Future.value([]);
+
+  late Stream<List<Result>> _results;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _results = (() {
+      late final StreamController<List<Result>> controller;
+      controller = StreamController(onListen: () async {
+        controller.add(await _sherlockResults);
+      });
+
+      return controller.stream;
+    })();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,9 +92,7 @@ class ExampleState extends State<ExampleView> {
               sherlockCompletion: SherlockCompletion(where: 'by', elements: widget.characters),
               sherlockCompletionMinResults: 1,
               onSearch: (input, sherlock) {
-                setState(() {
-                  sherlock.search(input: input).then((results) => _results = results.sorted().unwrap());
-                });
+                _sherlockResults = sherlock.search(input: input);
               },
               completionsBuilder: (context, completions) => SherlockCompletionsBuilder(
                 completions: completions,
@@ -96,18 +112,33 @@ class ExampleState extends State<ExampleView> {
                 ),
               ),
             ),
-            if (_results.isNotEmpty)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(8, 8, 0, 0),
-                child: Text(
-                  'Results',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.0,
-                  ),
-                ),
-              ),
-            ..._results.map((e) => CharacterCard(character: e)),
+            StreamBuilder<List<Result>>(
+              stream: _results,
+              builder: (context, snapshot) {
+                List<Map<String, dynamic>> results = [];
+
+                if (snapshot.hasData) {
+                  results = snapshot.data!.sorted().unwrap();
+                }
+
+                return Column(
+                  children: [
+                    if (results.isNotEmpty)
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(8, 8, 0, 0),
+                        child: Text(
+                          'Results',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16.0,
+                          ),
+                        ),
+                      ),
+                    ...results.map((e) => CharacterCard(character: e))
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),
