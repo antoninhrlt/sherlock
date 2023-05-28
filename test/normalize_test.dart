@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sherlock/result.dart';
 import 'package:sherlock/sherlock.dart';
 
 void main() {
-  test('normalize', () {
+  test('normalize', () async {
     var string = 'wéirdö nàmè AA';
     string = string.normalize(const NormalizationSettings(
       normalizeCase: true,
@@ -32,7 +33,7 @@ void main() {
     }
   ];
 
-  test('normalizeNothing', () {
+  test('normalizeNothing', () async {
     var sherlock = Sherlock(
       elements: elements,
       normalization: const NormalizationSettings(
@@ -42,11 +43,11 @@ void main() {
       ),
     );
 
-    final results = sherlock.query(where: 'name', regex: r'^Something with a weird name$');
-    debugPrint(results.toString());
+    final results = await sherlock.query(where: 'name', regex: r'^Something with a weird name$');
+    debugPrint(results.sorted().unwrap().toString());
   });
 
-  test('normalizeDiacritics', () {
+  test('normalizeDiacritics', () async {
     var sherlock = Sherlock(
       elements: elements,
       normalization: const NormalizationSettings(
@@ -56,11 +57,11 @@ void main() {
       ),
     );
 
-    final results = sherlock.query(where: 'name', regex: r'^Something with a weird name$');
-    debugPrint(results.toString());
+    final results = await sherlock.query(where: 'name', regex: r'^Something with a weird name$');
+    debugPrint(results.sorted().unwrap().toString());
   });
 
-  test('normalizeCaseType', () {
+  test('normalizeCaseType', () async {
     var sherlock = Sherlock(
       elements: elements,
       normalization: const NormalizationSettings(
@@ -70,14 +71,14 @@ void main() {
       ),
     );
 
-    final results1 = sherlock.query(where: 'name', regex: r'^something camel case$');
-    debugPrint(results1.toString());
+    final results1 = await sherlock.query(where: 'name', regex: r'^something camel case$');
+    debugPrint(results1.sorted().unwrap().toString());
 
-    final results2 = sherlock.query(where: 'name', regex: r'^something snake case$');
-    debugPrint(results2.toString());
+    final results2 = await sherlock.query(where: 'name', regex: r'^something snake case$');
+    debugPrint(results2.sorted().unwrap().toString());
   });
 
-  test('normalizeCase', () {
+  test('normalizeCase', () async {
     var sherlock = Sherlock(
       elements: elements,
       normalization: const NormalizationSettings(
@@ -87,10 +88,10 @@ void main() {
       ),
     );
 
-    final results1 = sherlock.query(where: 'name', regex: r'^something NOT UPPER case$');
-    debugPrint(results1.toString());
+    final results1 = await sherlock.query(where: 'name', regex: r'^something NOT UPPER case$');
+    debugPrint(results1.sorted().unwrap().toString());
 
-    final results2 = sherlock.query(
+    final results2 = await sherlock.query(
       where: 'name',
       regex: r'^something NOT UPPER case$',
       specificNormalization: const NormalizationSettings(
@@ -100,10 +101,10 @@ void main() {
       ),
     );
 
-    debugPrint(results2.toString());
+    debugPrint(results2.sorted().unwrap().toString());
   });
 
-  test('normalizeAll', () {
+  test('normalizeAll', () async {
     var sherlock = Sherlock(
       elements: elements,
       normalization: const NormalizationSettings(
@@ -113,11 +114,11 @@ void main() {
       ),
     );
 
-    final results = sherlock.query(where: 'name', regex: r'^weirder than the weird$');
-    debugPrint(results.toString());
+    final results = await sherlock.query(where: 'name', regex: r'^weirder than the weird$');
+    debugPrint(results.sorted().unwrap().toString());
   });
 
-  test('specificNormalize', () {
+  test('specificNormalize', () async {
     var sherlock = Sherlock(
       elements: elements,
       normalization: const NormalizationSettings(
@@ -127,10 +128,10 @@ void main() {
       ),
     );
 
-    final results1 = sherlock.query(where: 'name', regex: r'^something with a weird name$');
-    debugPrint(results1.toString());
+    final results1 = await sherlock.query(where: 'name', regex: r'^something with a weird name$');
+    debugPrint(results1.sorted().unwrap().toString());
 
-    final results2 = sherlock.query(
+    final results2 = await sherlock.query(
       where: 'name',
       regex: r'^something with a weird name$',
       specificNormalization: const NormalizationSettings(
@@ -140,6 +141,6 @@ void main() {
       ),
     );
 
-    debugPrint(results2.toString());
+    debugPrint(results2.sorted().unwrap().toString());
   });
 }

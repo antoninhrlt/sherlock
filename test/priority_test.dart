@@ -24,7 +24,7 @@ void main() {
     },
   ];
 
-  test('priority', () {
+  test('priority', () async {
     PriorityMap columnPriorities = {
       'title': 4,
       'categories': 3,
@@ -33,12 +33,12 @@ void main() {
     };
 
     var sherlock = Sherlock(elements: activities, priorities: columnPriorities);
-    final results = sherlock.search(where: '*', input: 'sport').unwrap();
+    final results = await sherlock.search(where: '*', input: 'sport');
 
-    debugPrint(results.toString());
+    debugPrint(results.unwrap().toString());
   });
 
-  test('priority2', () {
+  test('priority2', () async {
     PriorityMap columnPriorities = {
       'title': 3,
       'description': 3,
@@ -46,8 +46,8 @@ void main() {
     };
 
     var sherlock = Sherlock(elements: activities, priorities: columnPriorities);
-    final results = sherlock.search(where: '*', input: 'sport').unwrap();
+    final results = await sherlock.search(where: '*', input: 'sport');
 
-    debugPrint(results.toString());
+    debugPrint(results.unwrap().toString());
   });
 }

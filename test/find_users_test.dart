@@ -25,9 +25,9 @@ void main() {
     },
   ];
 
-  test('findUsers', () {
+  test('findUsers', () async {
     final sherlock = Sherlock(elements: users);
-    final results = sherlock.search(where: ['firstName'], input: 'f').sorted().unwrap();
-    debugPrint('results: $results');
+    final results = await sherlock.search(where: ['firstName'], input: 'f');
+    debugPrint('results: ${results.sorted().unwrap()}');
   });
 }

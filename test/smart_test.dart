@@ -6,29 +6,29 @@ import 'package:sherlock/sherlock.dart';
 import 'sherlock_test.dart';
 
 void main() {
-  test('uniqueSmartSearch', () {
+  test('uniqueSmartSearch', () async {
     var sherlock = Sherlock(elements: activities);
 
-    var results = sherlock.search(where: '*', input: 'cAtS');
+    var results = await sherlock.search(where: '*', input: 'cAtS');
     debugPrint(results.sorted().unwrap().toString());
   });
 
-  test('smartSearch', () {
+  test('smartSearch', () async {
     var sherlock = Sherlock(elements: activities);
 
-    var results = sherlock.search(where: '*', input: 'cAtS');
+    var results = await sherlock.search(where: '*', input: 'cAtS');
     debugPrint(results.sorted().unwrap().toString());
 
-    results = sherlock.search(where: '*', input: 'live online');
+    results = await sherlock.search(where: '*', input: 'live online');
     debugPrint(results.sorted().unwrap().toString());
 
-    results = sherlock.search(where: ['title'], input: 'live online');
+    results = await sherlock.search(where: ['title'], input: 'live online');
     debugPrint(results.sorted().unwrap().toString());
 
-    results = sherlock.search(where: '*', input: 'extreme Vr');
+    results = await sherlock.search(where: '*', input: 'extreme Vr');
     debugPrint(results.sorted().unwrap().toString());
 
-    results = sherlock.search(where: ['title', 'categories'], input: 'cats');
+    results = await sherlock.search(where: ['title', 'categories'], input: 'cats');
     debugPrint(results.sorted().unwrap().toString());
   });
 
@@ -44,22 +44,22 @@ void main() {
     },
   ];
 
-  test('smartSearch2', () {
+  test('smartSearch2', () async {
     var sherlock = Sherlock(elements: activities2);
 
-    var results = sherlock.search(where: ['title'], input: 'fun surfing');
+    var results = await sherlock.search(where: ['title'], input: 'fun surfing');
     debugPrint(results.sorted().unwrap().toString());
 
-    results = sherlock.search(where: ['title'], input: 'fun sarfing');
+    results = await sherlock.search(where: ['title'], input: 'fun sarfing');
     debugPrint(results.sorted().unwrap().toString());
 
-    results = sherlock.search(where: ['title'], input: 'fun zarfing');
+    results = await sherlock.search(where: ['title'], input: 'fun zarfing');
     debugPrint(results.sorted().unwrap().toString());
 
-    results = sherlock.search(where: ['title'], input: 'fon zarfing');
+    results = await sherlock.search(where: ['title'], input: 'fon zarfing');
     debugPrint(results.sorted().unwrap().toString());
 
-    results = sherlock.search(where: ['title'], input: 'zarfing');
+    results = await sherlock.search(where: ['title'], input: 'zarfing');
     debugPrint(results.sorted().unwrap().toString());
   });
 
@@ -84,9 +84,9 @@ void main() {
     },
   ];
 
-  test('stopWords', () {
+  test('stopWords', () async {
     var sherlock = Sherlock(elements: activities3);
-    var results = sherlock.search(where: ['title'], input: 'with the friends the');
+    var results = await sherlock.search(where: ['title'], input: 'with the friends the');
     debugPrint(results.sorted().unwrap().toString());
   });
 }

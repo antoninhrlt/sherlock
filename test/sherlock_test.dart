@@ -57,105 +57,99 @@ final sherlock = Sherlock(elements: activities);
 /// Tests have to be run one by one, never all together because it's threaded
 /// and they use the same [Sherlock] instance.
 void main() {
-  test('query', () {
+  test('query', () async {
     /// All activities where their title is the string 'Extreme VR'.
-    final results1 = sherlock.query(where: 'title', regex: r'^Extreme VR$').sorted().unwrap();
-    debugPrint(results1.toString());
+    final results1 = await sherlock.query(where: 'title', regex: r'^Extreme VR$');
+    debugPrint(results1.sorted().unwrap().toString());
 
     /// All activities where their title contains the word 'vr'.
-    final results2 = sherlock.query(where: 'title', regex: r'vr').sorted().unwrap();
-    debugPrint(results2.toString());
+    final results2 = await sherlock.query(where: 'title', regex: r'vr');
+    debugPrint(results2.sorted().unwrap().toString());
 
     /// All activities where their title contains the word 'live' or 'vr'.
-    final results3 = sherlock.query(where: 'title', regex: r'(live|vr)').sorted().unwrap();
-    debugPrint(results3.toString());
+    final results3 = await sherlock.query(where: 'title', regex: r'(live|vr)');
+    debugPrint(results3.sorted().unwrap().toString());
 
     /// All activities where their description contains the word 'live'.
-    final results4 = sherlock.query(where: 'description', regex: r'(live)').sorted().unwrap();
-    debugPrint(results4.toString());
+    final results4 = await sherlock.query(where: 'description', regex: r'(live)');
+    debugPrint(results4.sorted().unwrap().toString());
 
     /// All activities where their description or title contains the word 'cat'.
-    List<Result> results5 = sherlock.query(where: 'title', regex: r'cat');
-    results5 += sherlock.query(where: 'description', regex: r'cat');
+    List<Result> results5 = await sherlock.query(where: 'title', regex: r'cat');
+    results5 += await sherlock.query(where: 'description', regex: r'cat');
 
     final results5_2 = results5.sorted().unwrap();
 
     debugPrint(results5_2.toString());
 
     /// All activities where at least one column's value contains the word 'vr'.
-    final results6 = sherlock.query(where: '*', regex: r'vr').sorted().unwrap();
-    debugPrint(results6.toString());
+    final results6 = await sherlock.query(where: '*', regex: r'vr');
+    debugPrint(results6.sorted().unwrap().toString());
 
     /// Invalid query
-    final results7 = sherlock.query(where: 'id', regex: r'foo').sorted().unwrap();
-    debugPrint(results7.toString());
+    final results7 = await sherlock.query(where: 'id', regex: r'foo');
+    debugPrint(results7.sorted().unwrap().toString());
 
     /// All elements with both words 'live' and 'stream' in their descriptions.
-    final results8 = sherlock.query(where: 'description', regex: r'(?=.*live)(?=.*stream).*').sorted().unwrap();
-    debugPrint(results8.toString());
+    final results8 = await sherlock.query(where: 'description', regex: r'(?=.*live)(?=.*stream).*');
+    debugPrint(results8.sorted().unwrap().toString());
   });
 
-  test('queryExist', () {
+  test('queryExist', () async {
     /// All activities where are monday is specified in the opening hours.
-    final results = sherlock.queryExist(where: 'openingHours', what: 'monday').sorted().unwrap();
-    debugPrint(results.toString());
+    final results = await sherlock.queryExist(where: 'openingHours', what: 'monday');
+    debugPrint(results.sorted().unwrap().toString());
   });
 
-  test('queryBool', () {
+  test('queryBool', () async {
     /// All activities having a title which does not correspond to 'Parc'.
-    final results1 = sherlock.queryBool(where: 'title', fn: (value) => value != 'Parc').sorted().unwrap();
-    debugPrint(results1.toString());
+    final results1 = await sherlock.queryBool(where: 'title', fn: (value) => value != 'Parc');
+    debugPrint(results1.sorted().unwrap().toString());
 
     /// All activities having at least one column's value corresponding to
     /// 'VR immersion'.
-    final results2 = sherlock.queryBool(where: '*', fn: (value) => value == 'VR immersion').sorted().unwrap();
-    debugPrint(results2.toString());
+    final results2 = await sherlock.queryBool(where: '*', fn: (value) => value == 'VR immersion');
+    debugPrint(results2.sorted().unwrap().toString());
 
     /// All activities starting at 7'o on tuesday.
-    final results3 = sherlock
-        .queryBool(
-          where: 'openingHours',
-          fn: (value) => value['tuesday'][0] == 7,
-        )
-        .sorted()
-        .unwrap();
+    final results3 = await sherlock.queryBool(
+      where: 'openingHours',
+      fn: (value) => value['tuesday'][0] == 7,
+    );
 
-    debugPrint(results3.toString());
+    debugPrint(results3.sorted().unwrap().toString());
   });
 
-  test('queryMatch', () {
+  test('queryMatch', () async {
     final sherlock = Sherlock(
       elements: activities,
       normalization: const NormalizationSettings.matching(),
     );
 
     /// All activities having a title corresponding to 'Parc'.
-    final results1 = sherlock.queryMatch(where: 'title', match: 'Parc').sorted().unwrap();
-    debugPrint(results1.toString());
+    final results1 = await sherlock.queryMatch(where: 'title', match: 'Parc');
+    debugPrint(results1.sorted().unwrap().toString());
 
     /// All activities having a title corresponding to 'parc', no matter
     /// the case.
-    final results2 = sherlock
-        .queryMatch(
-          where: 'title',
-          match: 'pArC',
-          specificNormalization: const NormalizationSettings(
-            normalizeCase: true,
-            normalizeCaseType: false,
-            removeDiacritics: false,
-          ),
-        )
-        .sorted()
-        .unwrap();
-    debugPrint(results2.toString());
+    final results2 = await sherlock.queryMatch(
+      where: 'title',
+      match: 'pArC',
+      specificNormalization: const NormalizationSettings(
+        normalizeCase: true,
+        normalizeCaseType: false,
+        removeDiacritics: false,
+      ),
+    );
+    debugPrint(results2.sorted().unwrap().toString());
 
     /// All activities having at least one column's value corresponding to
     /// 'VR immersion'.
-    final results3 = sherlock.queryMatch(where: '*', match: 'VR immersion').sorted().unwrap();
-    debugPrint(results3.toString());
+    final results3 = await sherlock.queryMatch(where: '*', match: 'VR immersion');
+    debugPrint(results3.sorted().unwrap().toString());
   });
 
-  test('where', () {
+  test('where', () async {
     sherlock.query(regex: r'');
     try {
       sherlock.search(where: 5, input: '');
