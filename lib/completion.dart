@@ -56,23 +56,20 @@ class SherlockCompletion {
   /// to try to get enough results as expected.
   ///
   /// Never returns more than [maxResults] results.
-  List<String> input({
+  Future<List<String>> input({
     required String input,
     bool caseSensitive = false,
     bool? caseSensitiveFurtherSearches,
     int? minResults,
     int? maxResults,
-  }) {
+  }) async {
     // No input, no results.
     if (input.isEmpty) {
       return [];
     }
 
-    // Stores the results of each query function called.
-    List<Result> allResults = [];
-
     // Checks for strings starting with [input].
-    allResults += sherlock.queryBool(
+    final Future<List<Result>> startingResults = sherlock.queryBool(
       where: where,
       fn: (value) {
         // Only matches with strings.
@@ -91,9 +88,9 @@ class SherlockCompletion {
 
     // Performs further searches to get at least minimum number of results
     // wanted.
-    if (minResults != null && minResults > allResults.length) {
-      // Searches for keyword starting with the [input].
-      allResults += sherlock.queryBool(
+    if (minResults != null && minResults > (await startingResults).length) {
+      // Searches for keyword starting with the input.
+      final Future<List<Result>> keywordStartingResults = sherlock.queryBool(
         where: where,
         fn: (value) {
           // Only matches with strings.
@@ -122,8 +119,8 @@ class SherlockCompletion {
         },
       );
 
-      // Searches [input] in strings.
-      allResults += sherlock.queryBool(
+      // Searches the input in strings.
+      final Future<List<Result>> inResults = sherlock.queryBool(
         where: where,
         fn: (value) {
           // Only matches with strings.
@@ -141,8 +138,26 @@ class SherlockCompletion {
           return value.contains(input);
         },
       );
+
+      return _resultsToStringResults(
+        [...await startingResults, ...await keywordStartingResults, ...await inResults],
+        minResults,
+        maxResults,
+      );
     }
 
+    return _resultsToStringResults(
+      await startingResults,
+      minResults,
+      maxResults,
+    );
+  }
+
+  List<String> _resultsToStringResults(
+    List<Result> allResults,
+    int? minResults,
+    int? maxResults,
+  ) {
     // The actual results from Sherlock.
     final results = allResults.sorted().unwrap();
 

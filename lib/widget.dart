@@ -53,15 +53,16 @@ class SherlockSearchBar extends StatefulWidget {
 }
 
 class _SherlockSearchBarState extends State<SherlockSearchBar> {
-  SearchController controller = SearchController();
+  final SearchController _controller = SearchController();
+  List<Widget> _completionWidgets = [];
 
   @override
   void initState() {
     super.initState();
 
-    controller.addListener(() {
+    _controller.addListener(() {
       if (widget.onSearch != null) {
-        widget.onSearch!(controller.text, widget.sherlock);
+        widget.onSearch!(_controller.text, widget.sherlock);
       }
     });
   }
@@ -80,28 +81,33 @@ class _SherlockSearchBarState extends State<SherlockSearchBar> {
       barPadding: MaterialStatePropertyAll(widget.padding),
       barTextStyle: MaterialStatePropertyAll(widget.textStyle),
       barHintStyle: MaterialStatePropertyAll(widget.hintStyle),
-      searchController: controller,
+      searchController: _controller,
       suggestionsBuilder: (context, controller) {
         // Text inside the input field of the search bar.
         final input = controller.text;
-        // SherlockCompletion's result for the input.
-        final suggestions = widget.sherlockCompletion.input(
+        // SherlockCompletion's results for the input.
+        final futureCompletions = widget.sherlockCompletion.input(
           input: input,
           minResults: widget.sherlockCompletionMinResults,
           maxResults: widget.sherlockCompletionMaxResults,
         );
 
-        final SherlockCompletionsBuilder builder = (widget.completionsBuilder != null)
-            ? widget.completionsBuilder!(context, suggestions)
-            : SherlockCompletionsBuilder(
-                completions: suggestions,
-                buildCompletion: (suggestion) => Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Text(suggestion),
-                ),
-              );
+        futureCompletions.then((completions) {
+          // Builds the completion widgets after the completion results are completed.
+          final SherlockCompletionsBuilder builder = (widget.completionsBuilder != null)
+              ? widget.completionsBuilder!(context, completions)
+              : SherlockCompletionsBuilder(
+                  completions: completions,
+                  buildCompletion: (suggestion) => Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Text(suggestion),
+                  ),
+                );
 
-        return builder.build();
+          _completionWidgets = builder.build();
+        });
+
+        return _completionWidgets;
       },
     );
   }

@@ -62,12 +62,12 @@ class Sherlock {
   /// The parameters are organised and defined like the [Sherlock] constructor.
   ///
   /// Returns the results returned by the callback [queries].
-  static List<Result> processUnique({
+  static Future<List<Result>> processUnique({
     required List<Element> elements,
     PriorityMap priorities = const {'*': 1},
     NormalizationSettings normalization = const NormalizationSettings.defaults(),
     required List<Result> Function(Sherlock sherlock) queries,
-  }) {
+  }) async {
     final sherlock = Sherlock(elements: elements, normalization: normalization, priorities: priorities);
     return queries(sherlock);
   }
@@ -88,12 +88,12 @@ class Sherlock {
   /// search but use instead the global [normalization] settings.
   ///
   /// Returns its research findings.
-  List<Result> search({
+  Future<List<Result>> search({
     dynamic where = '*',
     required String input,
     List<String> stopWords = StopWords.en,
     bool useGlobalNormalization = false,
-  }) {
+  }) async {
     // No where parameter provided or no input provided.
     if (where == [] || input.isEmpty) {
       return [];
@@ -116,7 +116,7 @@ class Sherlock {
     }
 
     // Equality search.
-    final resultsEquality = _searchExtension(
+    final Future<List<Result>> resultsEquality = _searchExtension(
       smartWhere,
       query: (where) => queryBool(
         where: where,
@@ -133,7 +133,7 @@ class Sherlock {
     );
 
     // "Starts with" search.
-    final resultsStarting = _searchExtension(
+    final Future<List<Result>> resultsStarting = _searchExtension(
       smartWhere,
       query: (where) => queryBool(
         where: where,
@@ -158,7 +158,7 @@ class Sherlock {
       searchWords: true,
     );
 
-    final resultsRegexAll = _searchExtension(
+    final Future<List<Result>> resultsRegexAll = _searchExtension(
       smartWhere,
       query: (where) => query(where: where, regex: regexAll),
     );
@@ -170,7 +170,7 @@ class Sherlock {
     );
 
     // At least all keywords in.
-    final resultsRegexAny = _searchExtension(
+    final Future<List<Result>> resultsRegexAny = _searchExtension(
       smartWhere,
       query: (where) => query(where: where, regex: regexAny),
     );
@@ -180,7 +180,14 @@ class Sherlock {
 
     // Removes the duplicates.
     // Browses the unchecked results (that might contain duplicates) to create a new safe list of results.
-    for (final Result result in [...resultsEquality, ...resultsStarting, ...resultsRegexAll, ...resultsRegexAny]) {
+    final uncheckedResults = [
+      ...await resultsEquality,
+      ...await resultsStarting,
+      ...await resultsRegexAll,
+      ...await resultsRegexAny
+    ];
+
+    for (final Result result in uncheckedResults) {
       // Results already in the results are not added.
       _addResultChecked(refDestination: results, element: result.element, priority: result.priority);
     }
@@ -189,10 +196,10 @@ class Sherlock {
   }
 
   /// Extension of the [search] function for repetitive tasks.
-  List<Result> _searchExtension(
+  Future<List<Result>> _searchExtension(
     Where smartWhere, {
-    required List<Result> Function(String where) query,
-  }) {
+    required Future<List<Result>> Function(String where) query,
+  }) async {
     // Calls the query for all the columns.
     if (smartWhere.isGlobal) {
       // Returns the results of the query call.
@@ -205,7 +212,8 @@ class Sherlock {
     // Calls the query for every column specified.
     for (var column in smartWhere.columns) {
       // Adds the results of this query to the list of results which will be returned by this function.
-      allResults += query(column);
+      final queryResults = await query(column);
+      allResults.addAll(queryResults);
     }
 
     return allResults;
@@ -222,11 +230,11 @@ class Sherlock {
   /// setting.
   ///
   /// Returns its research findings.
-  List<Result> query({
+  Future<List<Result>> query({
     String where = '*',
     required String regex,
     NormalizationSettings? specificNormalization,
-  }) {
+  }) async {
     // Normalization settings to give when function needs them.
     final localNormalization = specificNormalization ?? normalization;
 
@@ -298,10 +306,10 @@ class Sherlock {
   /// setting.
   ///
   /// Returns its research findings.
-  List<Result> queryExist({
+  Future<List<Result>> queryExist({
     required String where,
     required String what,
-  }) {
+  }) async {
     return _anyQuery(where, (element, columnId, priority, refResults) {
       // Gets the value from the currently "studied" column of the element.
       final value = element[columnId];
@@ -325,10 +333,10 @@ class Sherlock {
   /// setting.
   ///
   /// Returns its research findings.
-  List<Result> queryBool({
+  Future<List<Result>> queryBool({
     String where = '*',
     required bool Function(dynamic value) fn,
-  }) {
+  }) async {
     return _anyQuery(where, (element, columnId, priority, refResults) {
       // Gets the value from the currently "studied" column of the element.
       final value = element[columnId];
@@ -357,11 +365,11 @@ class Sherlock {
   /// setting.
   ///
   /// Returns its research findings.
-  List<Result> queryMatch({
+  Future<List<Result>> queryMatch({
     String where = '*',
     required dynamic match,
     NormalizationSettings? specificNormalization,
-  }) {
+  }) async {
     // Whether the object to compare is a string.
     if (match.runtimeType == String) {
       // Normalization settings to give when function needs them.
@@ -395,7 +403,7 @@ class Sherlock {
   /// The [callback] should add the results it found in the given [callback.refResults] variable.
   ///
   /// The returned value of this function is supposed to be returned by the query function calling it.
-  List<Result> _anyQuery(
+  Future<List<Result>> _anyQuery(
     String where,
     void Function(
       Element element,
@@ -403,7 +411,7 @@ class Sherlock {
       int priority,
       List<Result> refResults,
     ) callback,
-  ) {
+  ) async {
     // Nothing to search, no results to return.
     if (elements.isEmpty) {
       return [];
