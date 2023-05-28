@@ -50,7 +50,7 @@ See also the [search completion tool](#search-completion-tool).
 
   Prototype
   ```dart
-  List<Element> processUnique(
+  Future<List<Element>> processUnique(
     List<Element> elements,
     PriorityMap priorities = const {'*': 1},
     NormalizationSettings normalization = /* default */,
@@ -83,7 +83,7 @@ See also the [search completion tool](#search-completion-tool).
   final results = processUnique(elements: users, (sherlock) {
     final resultsName = sherlock.queryMatch(where: 'firstName', 'Finn');
     final resultsCity = sherlock.queryMatch(where: 'city', 'Edinburgh');
-    return [...resultsName, ...resultsCity];
+    return [...await resultsName, ...await resultsCity];
   });
   ```
 
@@ -251,7 +251,7 @@ See also the [search completion tool](#search-completion-tool).
 
   Prototypes
   ```dart
-  List<Result> query(
+  Future<List<Result>> query(
     String where = '*', 
     String regex, 
     NormalizationSettings specificNormalization = /* this.normalization */,
@@ -286,7 +286,7 @@ See also the [search completion tool](#search-completion-tool).
   Prototype
   ```dart
   /// Searches for elements where [what] exists (is not null) in the column [where].
-  List<Result> queryExist(String where, String what)
+  Future<List<Result>> queryExist(String where, String what)
   ```
   Usage
   ```dart
@@ -295,9 +295,12 @@ See also the [search completion tool](#search-completion-tool).
   ```
   Prototypes
   ```dart
-  List<Result> queryBool(String where = '*', bool Function(dynamic value) fn)
+  Future<List<Result>> queryBool(
+    String where = '*', 
+    bool Function(dynamic value) fn,
+  )
 
-  List<Result> queryMatch(
+  Future<List<Result>> queryMatch(
     String where = '*', 
     dynamic match,
     NormalizationSettings specificNormalization = /* this.normalization */,
@@ -340,7 +343,7 @@ See also the [search completion tool](#search-completion-tool).
 - ### Smart search
   Prototype
   ```dart
-  List<Result> search(
+  Future<List<Result>> search(
     dynamic where = '*', 
     String input,     
     List<String> stopWords = StopWords.en,
@@ -391,12 +394,12 @@ The results could be used in a search widget for example.
     },
   ];
 
-  final completion = SherlockCompletion(where: 'name', elements: places);
+  final completer = SherlockCompletion(where: 'name', elements: places);
   ```
 - ### Input
   Prototype
   ```dart
-  List<String> input(
+  Future<List<String>> input(
     String input,
     bool caseSensitive = false,
     bool? caseSensitiveFurtherSearches,
@@ -407,12 +410,10 @@ The results could be used in a search widget for example.
   Usage
   ```dart
   // Find all the names starting with 'fr'.
-  final a = completion.input(input: 'fr');
-  print(a);
+  await completer.input(input: 'fr');
 
   // Find all the names starting with 'Fr', and the case matters.
-  final b = completion.input(input: 'Fr', caseSensitive: true);  
-  print(b);
+  await completer.input(input: 'Fr', caseSensitive: true);  
   ```
   ```
   [Fruits and vegetables market, Fresh fish store]
@@ -420,17 +421,15 @@ The results could be used in a search widget for example.
   ```
   ```dart
   // Try to find at least 4 names matching with 'fr'.
-  final c = completion.input(input: 'fr', minResults: 4);
-  print(c);
+  await completer.input(input: 'fr', minResults: 4);
 
   // Try to find at least 3 names matching with 'Fr', and the case matters only 
   // for the searches that might be performed if there is less than 3 results.
-  final d = completion.input(
+  await completer.input(
     input: 'Fr', 
     minResults: 3, 
     caseSensitiveFurtherSearches: true,
   );
-  print(d)
   ```
   ```
   [Fruits and vegetables market, Fresh fish store, Best place to find fruits, Museum of Africa]
@@ -438,8 +437,7 @@ The results could be used in a search widget for example.
   ```
   ```dart
   // Find maximum 1 name matching with 'fr'.
-  final e = completion.input(input: 'fr', maxResults: 1);
-  print(e);
+  completion.input(input: 'fr', maxResults: 1);
   ```
   ```
   [Fruits and vegetables market]
@@ -447,31 +445,16 @@ The results could be used in a search widget for example.
 - ### Results
   Prototypes
   ```dart
-  /// [Sherlock] results of the last [input] call.
-  List<Map<String, dynamic>> results;
-
-  /// [input] results.
-  List<String> input(...);
+  // Completions for the given input.
+  Future<List<String>> input(...);
   ```
   Usage
   ```dart
-  List<String> resultNames = completion.input(input: 'fr');
+  List<String> resultNames = await completion.input(input: 'fr');
   print('names: $resultNames')
-
-  List<Map<String, dynamic>> resultElements = completion.results;
-  print('elements: $resultElements'); 
   ```
   ```
   names: [Fruits and vegetables market, Fresh fish store]
-  elements: [
-    {
-      name: Fruits and vegetables market, 
-      description: A cool place to buy fruits and vegetables
-    }, 
-    {
-      name: Fresh fish store
-    }
-  ] 
   ```
 
 - ### Unchanged ranges of the results
@@ -507,7 +490,7 @@ The results could be used in a search widget for example.
     results: results,
   );
 
-  print(results);
+  print(await results);
   print(unchangedRanges);
   ```
   ```
