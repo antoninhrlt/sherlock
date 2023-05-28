@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:sherlock/result.dart';
 import 'package:sherlock/sherlock.dart';
 
@@ -24,5 +25,7 @@ void main() {
   ];
 
   final sherlock = Sherlock(elements: users);
-  final foundUsers = sherlock.queryMatch(where: 'firstName', match: 'Suz').sorted().unwrap();
+  sherlock
+      .queryMatch(where: 'firstName', match: 'Suz')
+      .then((results) => debugPrint('Found users: ${results.sorted().unwrap()}'));
 }

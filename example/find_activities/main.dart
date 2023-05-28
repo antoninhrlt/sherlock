@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:sherlock/result.dart';
 import 'package:sherlock/sherlock.dart';
 
@@ -20,5 +21,7 @@ void main() {
   ];
 
   final sherlock = Sherlock(elements: activities);
-  final foundActivities = sherlock.query(where: '*', regex: r'sport').sorted().unwrap();
+  sherlock
+      .query(where: '*', regex: r'sport')
+      .then((results) => debugPrint('Found activities: ${results.sorted().unwrap()}'));
 }

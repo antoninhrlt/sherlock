@@ -75,7 +75,7 @@ class ExampleState extends State<ExampleView> {
               sherlockCompletionMinResults: 1,
               onSearch: (input, sherlock) {
                 setState(() {
-                  _results = sherlock.search(input: input).sorted().unwrap();
+                  sherlock.search(input: input).then((results) => _results = results.sorted().unwrap());
                 });
               },
               completionsBuilder: (context, completions) => SherlockCompletionsBuilder(
