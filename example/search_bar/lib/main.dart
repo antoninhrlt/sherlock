@@ -7,11 +7,11 @@ import 'package:sherlock/sherlock.dart';
 import 'package:sherlock/widget.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ExampleApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ExampleApp extends StatelessWidget {
+  const ExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +30,8 @@ class MyApp extends StatelessWidget {
 class ExampleView extends StatefulWidget {
   ExampleView({super.key});
 
+  /// The data to browse into.
+  /// Given to [Sherlock] for researches.
   final List<Map<String, dynamic>> characters = [
     {
       'name': 'Jiji',
@@ -59,23 +61,41 @@ class ExampleView extends StatefulWidget {
   State<StatefulWidget> createState() => ExampleState();
 }
 
+/// Auto-update when the results are updated.
 class ExampleState extends State<ExampleView> {
-  Future<List<Result>> _sherlockResults = Future.value([]);
+  /// Will be updated on search with the [Sherlock]'s results.
+  Future<List<Result>> _results = Future.value([]);
 
-  late Stream<List<Result>> _results;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _results = (() {
-      late final StreamController<List<Result>> controller;
-      controller = StreamController(onListen: () async {
-        controller.add(await _sherlockResults);
-      });
-
-      return controller.stream;
-    })();
+  /// Builds the [SherlockSearchBar] to browse [widget.characters].
+  SherlockSearchBar buildSearchBar() {
+    return SherlockSearchBar(
+      isFullScreen: true,
+      sherlock: Sherlock(elements: widget.characters),
+      sherlockCompletion: SherlockCompletion(where: 'by', elements: widget.characters),
+      sherlockCompletionMinResults: 1,
+      onSearch: (input, sherlock) {
+        setState(() {
+          _results = sherlock.search(input: input);
+        });
+      },
+      completionsBuilder: (context, completions) => SherlockCompletionsBuilder(
+        completions: completions,
+        buildCompletion: (completion) => Padding(
+          padding: const EdgeInsets.all(8),
+          child: Row(
+            children: [
+              Text(
+                completion,
+                style: const TextStyle(fontSize: 14),
+              ),
+              const Spacer(),
+              const Icon(Icons.check),
+              const Icon(Icons.close)
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -83,63 +103,38 @@ class ExampleState extends State<ExampleView> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SherlockSearchBar(
-              isFullScreen: true,
-              sherlock: Sherlock(elements: widget.characters),
-              sherlockCompletion: SherlockCompletion(where: 'by', elements: widget.characters),
-              sherlockCompletionMinResults: 1,
-              onSearch: (input, sherlock) {
-                _sherlockResults = sherlock.search(input: input);
-              },
-              completionsBuilder: (context, completions) => SherlockCompletionsBuilder(
-                completions: completions,
-                buildCompletion: (completion) => Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    children: [
-                      Text(
-                        completion,
-                        style: const TextStyle(fontSize: 14),
+        // Rebuilds the column with the results when [_results] is updated.
+        child: FutureBuilder<List<Result>>(
+          future: _results,
+          builder: (context, snapshot) {
+            debugPrint('BUILD FUTURE');
+
+            List<Map<String, dynamic>> results = [];
+
+            if (snapshot.hasData) {
+              // Retrieves the [_results]'s valid values.
+              results = snapshot.data!.sorted().unwrap();
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildSearchBar(),
+                if (results.isNotEmpty)
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(8, 8, 0, 0),
+                    child: Text(
+                      'Results',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.0,
                       ),
-                      const Spacer(),
-                      const Icon(Icons.check),
-                      const Icon(Icons.close)
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ),
-            StreamBuilder<List<Result>>(
-              stream: _results,
-              builder: (context, snapshot) {
-                List<Map<String, dynamic>> results = [];
-
-                if (snapshot.hasData) {
-                  results = snapshot.data!.sorted().unwrap();
-                }
-
-                return Column(
-                  children: [
-                    if (results.isNotEmpty)
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(8, 8, 0, 0),
-                        child: Text(
-                          'Results',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16.0,
-                          ),
-                        ),
-                      ),
-                    ...results.map((e) => CharacterCard(character: e))
-                  ],
-                );
-              },
-            ),
-          ],
+                ...results.map((e) => CharacterCard(character: e))
+              ],
+            );
+          },
         ),
       ),
     );
