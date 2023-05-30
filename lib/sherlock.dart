@@ -61,15 +61,15 @@ class Sherlock {
   ///
   /// The parameters are organised and defined like the [Sherlock] constructor.
   ///
-  /// Returns the results returned by the callback [queries].
+  /// Returns the results returned by the callback [fn].
   static Future<List<Result>> processUnique({
     required List<Element> elements,
     PriorityMap priorities = const {'*': 1},
     NormalizationSettings normalization = const NormalizationSettings.defaults(),
-    required List<Result> Function(Sherlock sherlock) queries,
-  }) async {
+    required Future<List<Result>> Function(Sherlock sherlock) fn,
+  }) {
     final sherlock = Sherlock(elements: elements, normalization: normalization, priorities: priorities);
-    return queries(sherlock);
+    return fn(sherlock);
   }
 
   /// Searches for values matching more or less with the [input].
