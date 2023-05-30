@@ -57,6 +57,17 @@ final sherlock = Sherlock(elements: activities);
 /// Tests have to be run one by one, never all together because it's threaded
 /// and they use the same [Sherlock] instance.
 void main() {
+  test('queryUnique', () async {
+    final results = await Sherlock.processUnique(
+      elements: activities,
+      fn: (sherlock) async {
+        final resultsName = sherlock.queryMatch(where: 'firstName', match: 'Finn');
+        final resultsCity = sherlock.queryMatch(where: 'city', match: 'Edinburgh');
+        return [...await resultsName, ...await resultsCity];
+      },
+    );
+  });
+
   test('query', () async {
     /// All activities where their title is the string 'Extreme VR'.
     final results1 = await sherlock.query(where: 'title', regex: r'^Extreme VR$');
