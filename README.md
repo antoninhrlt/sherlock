@@ -224,30 +224,26 @@ See also the [search completion tool](#search-completion-tool).
   Results are sorted following the `priorities` map.
   ```dart
   final sherlock = Sherlock(/*...*/);
-  List<Result> results = sherlock./* query */.sorted();
+  List<Result> results = (await sherlock./* query */).sorted();
   ```
 
   Unwrapping results means getting just the `element` object from the `Result` object.
   ```dart
   final sherlock = Sherlock(/*...*/);
-  List<Result> results = sherlock./* query */.sorted();
+  List<Result> results = (await sherlock./* query */).sorted();
   List<Map> foundElements = results.unwrap();
   ```
 
-  Getting results unsorted means the results will be in the order they were found.
-  ```dart
-  final sherlock = Sherlock(/*...*/);
-  List<Result> results = sherlock./* query */;
-  ```
+  > Note: Getting results unsorted means the results will be in the order they were found.
+
   Also, the results can be sorted at the end after all queries are done :
   ```dart
   final sherlock = Sherlock(/*...*/);
 
-  List<Result> allResults [];
-  allResults += sherlock./* query */;
-  allResults += sherlock./* query */;
+  final Future<List<Result>> results1 = sherlock./* query */;
+  final Future<List<Result>> results2 = sherlock./* query */;
 
-  allResults = allResults.sorted();
+  final allResults = [...await results1, ...await results2].sorted();
   ```
 - ### Queries
   Every query returns its research findings (results) but they are not sorted. Click [here](#results) to learn how to manage them.
