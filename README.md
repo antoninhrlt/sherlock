@@ -80,11 +80,14 @@ See also the [search completion tool](#search-completion-tool).
     },
   ];
 
-  final results = processUnique(elements: users, (sherlock) {
-    final resultsName = sherlock.queryMatch(where: 'firstName', 'Finn');
-    final resultsCity = sherlock.queryMatch(where: 'city', 'Edinburgh');
-    return [...await resultsName, ...await resultsCity];
-  });
+  final results = await Sherlock.processUnique(
+    elements: users,
+    fn: (sherlock) async {
+      final resultsName = sherlock.queryMatch(where: 'firstName', match: 'Finn');
+      final resultsCity = sherlock.queryMatch(where: 'city', match: 'Edinburgh');
+      return [...await resultsName, ...await resultsCity];
+    },
+  );
   ```
 
 - ### Create a `Sherlock` instance.
