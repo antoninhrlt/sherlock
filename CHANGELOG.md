@@ -4,6 +4,8 @@
 | 0.0.0 ▲ | An upper version is recommended, but this version can be used properly |
 | 0.0.0 🛇 | Version that should never have been published as this, it contains bugs or it is incorrect |
 
+- # 0.2.0 ✔
+  Everything now asynchronous. Most variables finalised. Declarative way.  
 - # 0.1.7 ✔
   Fix duplicates bug, issue #6
 - # 0.1.6 🛇
