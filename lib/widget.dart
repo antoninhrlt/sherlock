@@ -93,18 +93,21 @@ class _SherlockSearchBarState extends State<SherlockSearchBar> {
         );
 
         futureCompletions.then((completions) {
-          // Builds the completion widgets after the completion results are completed.
-          final SherlockCompletionsBuilder builder = (widget.completionsBuilder != null)
-              ? widget.completionsBuilder!(context, completions)
-              : SherlockCompletionsBuilder(
-                  completions: completions,
-                  buildCompletion: (suggestion) => Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(suggestion),
-                  ),
-                );
+          var stringCompletions = widget.sherlockCompletion.getStrings(fromResults: completions);
+          stringCompletions.then((completions) {
+            // Builds the completion widgets after the completion results are completed.
+            final SherlockCompletionsBuilder builder = (widget.completionsBuilder != null)
+                ? widget.completionsBuilder!(context, completions)
+                : SherlockCompletionsBuilder(
+                    completions: completions,
+                    buildCompletion: (suggestion) => Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(suggestion),
+                    ),
+                  );
 
-          _completionWidgets = builder.build();
+            _completionWidgets = builder.build();
+          });
         });
 
         return _completionWidgets;

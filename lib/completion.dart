@@ -56,7 +56,7 @@ class SherlockCompletion {
   /// to try to get enough results as expected.
   ///
   /// Never returns more than [maxResults] results.
-  Future<List<String>> input({
+  Future<List<Result>> input({
     required String input,
     bool caseSensitive = false,
     bool? caseSensitiveFurtherSearches,
@@ -139,38 +139,41 @@ class SherlockCompletion {
         },
       );
 
-      return _resultsToStringResults(
+      return _selectResults(
         [...await startingResults, ...await keywordStartingResults, ...await inResults],
         minResults,
         maxResults,
       );
     }
 
-    return _resultsToStringResults(
+    return _selectResults(
       await startingResults,
       minResults,
       maxResults,
     );
   }
 
-  List<String> _resultsToStringResults(
+  List<Result> _selectResults(
     List<Result> allResults,
     int? minResults,
     int? maxResults,
   ) {
     // The actual results from Sherlock.
-    final results = allResults.sorted().unwrap();
-
-    // Does not return the elements but the fields [where].
-    var stringResults = results.map((e) => e[where].toString()).toSet().toList();
+    final results = allResults.sorted();
 
     // Returns only [maxResults] results.
     if (maxResults != null && maxResults < results.length) {
-      return stringResults.getRange(0, maxResults).toList();
+      return results.getRange(0, maxResults).toList();
     }
 
     // Returns all the results.
-    return stringResults;
+    return results;
+  }
+
+  /// Returns the value of [where] for each result's element in order to return
+  /// a list of strings instead of results.
+  Future<List<String>> getStrings({required List<Result> fromResults}) async {
+    return fromResults.unwrap().map((e) => e[where].toString()).toSet().toList();
   }
 
   /// Returns the range of the text which has not been changed by the
@@ -180,10 +183,10 @@ class SherlockCompletion {
   ///
   /// ## Example
   /// input: "Linus T" -> completion: "Linus Torvalds". The unchanged range is from 'L' to 'T' so 0 to 6.
-  static List<Range> unchangedRanges({
+  static Future<List<Range>> unchangedRanges({
     required String input,
     required List<String> results,
-  }) {
+  }) async {
     var ranges = <Range>[];
 
     for (final result in results) {
