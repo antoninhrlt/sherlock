@@ -398,7 +398,7 @@ The results could be used in a search widget for example.
 - ### Input
   Prototype
   ```dart
-  Future<List<String>> input(
+  Future<List<Result>> input(
     String input,
     bool caseSensitive = false,
     bool? caseSensitiveFurtherSearches,
@@ -408,10 +408,10 @@ The results could be used in a search widget for example.
   ```
   Usage
   ```dart
-  // Find all the names starting with 'fr'.
+  // Find all the elements with names starting with 'fr'.
   await completer.input(input: 'fr');
 
-  // Find all the names starting with 'Fr', and the case matters.
+  // Find all the elements with names starting with 'Fr', and the case matters.
   await completer.input(input: 'Fr', caseSensitive: true);  
   ```
   ```
@@ -419,11 +419,12 @@ The results could be used in a search widget for example.
   [Fruits and vegetables market, Fresh fish store]
   ```
   ```dart
-  // Try to find at least 4 names matching with 'fr'.
+  // Try to find at least 4 elements with names matching with 'fr'.
   await completer.input(input: 'fr', minResults: 4);
 
-  // Try to find at least 3 names matching with 'Fr', and the case matters only 
-  // for the searches that might be performed if there is less than 3 results.
+  // Try to find at least 3 elements with names matching with 'Fr', and the 
+  // case matters only for the searches that might be performed if there is 
+  // less than 3 results.
   await completer.input(
     input: 'Fr', 
     minResults: 3, 
@@ -441,25 +442,36 @@ The results could be used in a search widget for example.
   ```
   [Fruits and vegetables market]
   ```
+  **Important note**: as you can see in the prototype, the `input` function 
+  retuerns a list of `Result`, not strings. To print the output seen above, the 
+  following has been done:
+  ```dart
+  final results = await completer.input(...);
+  // Only get the completion strings from the results.
+  final stringResults = completer.getStrings(fromResults: results);
+  debugPrint(stringResults.toString());
+  ```
 - ### Results
   Prototypes
   ```dart
-  // Completions for the given input.
-  Future<List<String>> input(...);
+  Future<List<String>> getStrings(
+    List<Result> fromResults
+  );
   ```
   Usage
   ```dart
-  List<String> resultNames = await completion.input(input: 'fr');
-  print('names: $resultNames')
+  List<Result> results = await completion.input(input: 'fr'));
+  List<String> resultNames = await completer.getStrings(fromResults: results);
+  print('names: $resultNames');
   ```
   ```
   names: [Fruits and vegetables market, Fresh fish store]
   ```
 
-- ### Unchanged ranges of the results
+- ### Unchanged ranges of the string results
   Prototype
   ```dart
-  List<Range> unchangedRanges({
+  Future<List<Range>> unchangedRanges({
     String input,
     List<String> results,
   )
@@ -481,15 +493,16 @@ The results could be used in a search widget for example.
 
   ```dart
   const input = 'Fr';
-  final results = completion.input(input: input, minResults: 4);
+  final results = await completer.input(input: input, minResults: 4);
+  final stringResults = completer.getStrings(fromResults: results);
 
   // The case is ignored.
-  List<Range> unchangedRanges = completion.unchangedRanges(
+  List<Range> unchangedRanges = await completer.unchangedRanges(
     input: input, 
-    results: results,
+    results: stringResults,
   );
 
-  print(await results);
+  print(results);
   print(unchangedRanges);
   ```
   ```
