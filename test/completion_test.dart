@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sherlock/completion.dart';
+import 'package:sherlock/result.dart';
 
 void main() {
   final places = [
@@ -31,8 +32,8 @@ void main() {
   final completion = SherlockCompletion(where: 'name', elements: places);
 
   test('completion', () async {
-    List<String> results = await completion.input(input: 'Fr');
-    debugPrint(results.toString());
+    List<Result> results = await completion.input(input: 'Fr');
+    debugPrint(completion.getStrings(fromResults: results).toString());
 
     debugPrint('---');
 
@@ -43,11 +44,12 @@ void main() {
   test('unchangedRanges', () async {
     const input = 'Fr';
     final results = await completion.input(input: input, minResults: 3);
+    final stringResults = await completion.getStrings(fromResults: results);
 
-    debugPrint(results.toString());
+    debugPrint(stringResults.toString());
 
     debugPrint(
-      SherlockCompletion.unchangedRanges(input: input, results: results).toString(),
+      SherlockCompletion.unchangedRanges(input: input, results: stringResults).toString(),
     );
   });
 
