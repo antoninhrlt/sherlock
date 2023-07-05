@@ -33,12 +33,14 @@ void main() {
 
   test('completion', () async {
     List<Result> results = await completion.input(input: 'Fr');
-    debugPrint(completion.getStrings(fromResults: results).toString());
+    List<String> stringResults = await completion.getStrings(fromResults: results);
+    debugPrint(stringResults.toString());
 
     debugPrint('---');
 
     results = await completion.input(input: 'Fr', minResults: 4);
-    debugPrint(results.toString());
+    stringResults = await completion.getStrings(fromResults: results);
+    debugPrint(stringResults.toString());
   });
 
   test('unchangedRanges', () async {
@@ -49,7 +51,7 @@ void main() {
     debugPrint(stringResults.toString());
 
     debugPrint(
-      SherlockCompletion.unchangedRanges(input: input, results: stringResults).toString(),
+      (await SherlockCompletion.unchangedRanges(input: input, results: stringResults)).toString(),
     );
   });
 
