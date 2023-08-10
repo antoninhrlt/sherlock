@@ -4,6 +4,8 @@
 | 0.0.0 ▲ | An upper version is recommended, but this version can be used properly |
 | 0.0.0 🛇 | Version that should never have been published as this, it contains bugs or it is incorrect |
 
+- # 0.2.2 ✔
+  Update README.md, move the assets and delete useless files.
 - # 0.2.1 ✔
   Completion results now as `Result`s or strings.
 - # 0.2.0 ✔
