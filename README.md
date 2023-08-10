@@ -1,14 +1,27 @@
-# sherlock
-Perform efficient and customized searches on local data. Built-in autocomplete feature for search bars.
+<div align="center">
+
+<img alt="sherlock logo" src="https://raw.githubusercontent.com/antoninhrlt/sherlock/main/assets/sherlock.svg" width="45%">
+
+**sherlock** is a library to perform efficient and customized **searches** on local data, for [Flutter](https://flutter.dev).
+
+It provides a search engine, a tool to complete search inputs and can be easily integrated in a search bar widget.
+
+<img src="https://raw.githubusercontent.com/antoninhrlt/sherlock/main/assets/search_bar.gif" style="border-radius: 30px" width="45%">
+
+Sherlock in the new [`SearchBar`](https://api.flutter.dev/flutter/material/SearchBar-class.html) widget ! (Flutter 3.10.0) \
+See this example [here](example/search_bar/lib/main.dart).
+
+[Usage](#usage) •
+[Overview](#overview) •
+[Completion tool](#search-completion-tool) •
+[Examples](example/README.md)
+
+</div>
 
 <p align="center">
-    <img src="https://github.com/antoninhrlt/sherlock/raw/main/media/search_bar.gif" style="border-radius: 30px">
+
 </p>
 
-<p align="center">
-    Sherlock in the new <b><code>SearchBar</code></b> widget ! (Flutter 3.10.0)<br>
-    See this example <a href="/example/search_bar/lib/main.dart">here</a>.
-</p>
 
 ## Usage
 Sherlock needs the elements in which it (he?) will search. Priorities can be specified for results sorting, but it is not mandatory.
