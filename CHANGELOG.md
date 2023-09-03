@@ -4,13 +4,15 @@
 | 0.0.0 ▲ | An upper version is recommended, but this version can be used properly |
 | 0.0.0 🛇 | Version that should never have been published as this, it contains bugs or it is incorrect |
 
-- # 0.2.2 ✔
+- # 0.2.3 ✔
+  Fix duplicates bug in "further researches" in completions generation.
+- # 0.2.2 🛇
   Update README.md, move the assets and delete useless files.
-- # 0.2.1 ✔
+- # 0.2.1 🛇
   Completion results now as `Result`s or strings.
-- # 0.2.0 ✔
+- # 0.2.0 🛇
   Everything now asynchronous. Most variables finalised. Declarative way.  
-- # 0.1.7 ✔
+- # 0.1.7 🛇
   Fix duplicates bug, issue #6
 - # 0.1.6 🛇
   Results are now returned by each function, and not stored by the `Sherlock` 
