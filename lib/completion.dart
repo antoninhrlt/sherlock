@@ -139,8 +139,13 @@ class SherlockCompletion {
         },
       );
 
+      // Collects results
+      var results = await startingResults;
+      _addListToList(results, await keywordStartingResults);
+      _addListToList(results, await inResults);
+
       return _selectResults(
-        [...await startingResults, ...await keywordStartingResults, ...await inResults],
+        results,
         minResults,
         maxResults,
       );
@@ -150,7 +155,17 @@ class SherlockCompletion {
       await startingResults,
       minResults,
       maxResults,
-    );
+    ).toSet().toList();
+  }
+
+  void _addListToList(List<Result> refDest, List<Result> list) {
+    for (final result in list) {
+      Sherlock.addResultChecked(
+        refDestination: refDest,
+        element: result.element,
+        priority: result.priority,
+      );
+    }
   }
 
   List<Result> _selectResults(

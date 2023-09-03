@@ -189,7 +189,7 @@ class Sherlock {
 
     for (final Result result in uncheckedResults) {
       // Results already in the results are not added.
-      _addResultChecked(refDestination: results, element: result.element, priority: result.priority);
+      Sherlock.addResultChecked(refDestination: results, element: result.element, priority: result.priority);
     }
 
     return results;
@@ -271,7 +271,7 @@ class Sherlock {
       }
 
       // The result is matching, adds it.
-      _addResultChecked(refDestination: refResults, element: element, priority: priority);
+      Sherlock.addResultChecked(refDestination: refResults, element: element, priority: priority);
 
       return;
     }
@@ -320,7 +320,7 @@ class Sherlock {
       }
 
       // The result is matching, adds it.
-      _addResultChecked(refDestination: refResults, element: element, priority: priority);
+      Sherlock.addResultChecked(refDestination: refResults, element: element, priority: priority);
     });
   }
 
@@ -352,7 +352,7 @@ class Sherlock {
       }
 
       // The result is matching, adds it.
-      _addResultChecked(refDestination: refResults, element: element, priority: priority);
+      Sherlock.addResultChecked(refDestination: refResults, element: element, priority: priority);
     });
   }
 
@@ -448,7 +448,7 @@ class Sherlock {
   ///
   /// Lists in Dart are passed like references, it means that the function directly modify the given list. Don't give a
   /// copy of the list!
-  void _addResultChecked({
+  static void addResultChecked({
     required List<Result> refDestination,
     required Element element,
     required int priority,
@@ -472,7 +472,7 @@ class Sherlock {
   ///
   /// Lists in Dart are passed like references, it means that the function directly modify the given list. Don't give a
   /// copy of the list!
-  void _addResultUnchecked({
+  static void _addResultUnchecked({
     required List<Result> refDestination,
     required Element element,
     required int priority,
